@@ -240,15 +240,19 @@ const _t = (s) => {
         return '00:00 (midnight)';
     } else if(time == '12:00') {
         return '12:00 (noon)';
-    } else{
-        return time;
+    } else {
+        if(time > '12:00') {
+            return time + " (" + (Number(time.substr(0, 2)) - 12) + ':' + (time.substr(3, 2) + 'PM') + ")";
+        } else {
+            return time;
+        }
     }
   }
   
   function onChange() {
       var delta = 0;
     var startTimes = {'1A': ['20:00', '06:30'],
-                                      '1B': ['22:00', '09:00'],
+                      '1B': ['22:00', '09:00'],
                       '1C': ['00:30', '11:00'],
                       '2A': ['03:00', '13:30'],
                       '2B': ['05:00', '16:00'],
@@ -271,7 +275,7 @@ const _t = (s) => {
     var i = 0;
     for(var prop in startTimes) {
         var startTime = moment.tz("2020-07-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-          var endTime = moment.tz("2020-07-13 " + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var endTime = moment.tz("2020-07-13 " + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
         
       var bold = false;
         if( bestDelta == i) {
