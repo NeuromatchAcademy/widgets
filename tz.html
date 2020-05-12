@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<title>Timezone selector</title>
+<title>Slot selector</title>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -28,7 +28,7 @@ Your timezone: <select class="js-Selector" onchange="onChange()" id='timezone'>
 </div>
 
 <div>
-<br/>Most people in your timezone choose region in <b>bold</b>. You can time-shift to fit your schedule! Some sections start with a half-hour difference and end a bit early to accommodate a different set of breaks.
+<br/>Most people in your timezone choose the slot in <b>bold</b>. You can time-shift to fit your schedule! Some sections start with a half-hour difference and end a bit early to accommodate a different set of breaks.
 </div>
 
 <script>
@@ -282,7 +282,7 @@ const _t = (s) => {
           bold = true;
         theStr += "<b>"
       }
-      theStr += "Region " + prop + " starts at " + formatTime(startTime) + " local time and ends at " + formatTime(endTime);
+      theStr += "Slot " + prop + " starts at " + formatTime(startTime) + " local time and ends at " + formatTime(endTime);
           if(bestDelta == i) {
           wasBold = true;
           theStr += "</b><br>"
