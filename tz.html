@@ -11,24 +11,33 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.28/moment-timezone-with-data-2012-2022.min.js"></script>
 
 
-<div class="container" style="max-width: 600px;">
+<div class="container" style="max-width: 700px;">
     <div class="card" style="margin-top: 50px;">
-        <h5 class="card-header">Timezone selector</h5>
+        <h5 class="card-header">Time slot selector</h5>
         <div class="card-body">
-Your timezone: <select class="js-Selector" onchange="onChange()" id='timezone'>
-
-</select>
 
 <div>
-<br/>Classes run at these times:
+<br/>Students and TAs work on <span style = "color:blue">coursework</span>
+ and <span style = "color:red">projects</span>. Mentors help with 
+ <span style = "color:red">projects</span> only. 
+ See times for coursework and projects in each slot below 
+ in your local timezone. <br>
+<br>
 </div>
+
+<span style = "font-size:13pt;"><i> Your local timezone:</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
+</select>
+<br>
+<span style = "font-size:13pt;"><i> Course times:</i></span>
+<br>
 
 <div id="times">
 
 </div>
 
 <div>
-<br/>Most people in your timezone choose the slot in <b>bold</b>. You can time-shift to fit your schedule! Some sections start with a half-hour difference and end a bit early to accommodate a different set of breaks.
+<br/>Most people in your timezone choose the slot in <b>bold</b>,
+ but you can choose whichever slot best fits your schedule!
 </div>
 
 <script>
@@ -250,22 +259,30 @@ const _t = (s) => {
   }
   
   function onChange() {
-      var delta = 0;
-    var startTimes = {'1A': ['20:00', '06:30'],
-                      '1B': ['22:00', '09:00'],
-                      '1C': ['00:30', '11:00'],
-                      '2A': ['03:00', '13:30'],
-                      '2B': ['05:00', '16:00'],
-                      '2C': ['07:30', '18:00'],
-                      '3A': ['13:00', '23:30'],
-                      '3B': ['15:00', '02:00'],
-                      '3C': ['17:30', '04:00']}
-    ///const offset = moment.tz(document.getElementById('timezone').value).utcOffset() * 60;
-  
+    var startTimes0 = {'1': ['00:30', '9:00'],
+                      '2': ['04:00', '12:30'],
+                      '3': ['07:30', '16:00'],
+                      '4': ['14:00', '22:30'],
+                      '5': ['17:30', '02:00']}
+    
+    var startTimes = {'1': ['00:30', '05:30'],
+                        '2': ['07:30', '12:30'],
+                        '3': ['07:30', '12:30'],
+                        '4': ['17:30', '22:30'],
+                        '5': ['17:30', '22:30']}
+
+    var startTimes2 = {'1': ['06:00', '9:00'],
+                        '2': ['04:00', '07:00'],
+                        '3': ['13:00', '16:00'],
+                        '4': ['14:00', '17:00'],
+                        '5': ['23:00', '02:00']}
+
+    
+
       var deltas = []
-      for(var prop in startTimes) {
-        var startTime = moment.tz("2020-07-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-      var fracHour = Number(startTime.substr(0, 2)) + Number(startTime.substr(3, 2)) / 60.0;
+      for(var prop in startTimes0) {
+        var startTime0 = moment.tz("2021-07-13 " + startTimes0[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+      var fracHour = Number(startTime0.substr(0, 2)) + Number(startTime0.substr(3, 2)) / 60.0;
       deltas.push(Math.abs(fracHour - 8.6));
     }
     var bestDelta = deltas.indexOf(Math.min.apply(Math, deltas));
@@ -274,22 +291,34 @@ const _t = (s) => {
     var theStr = "";
     var i = 0;
     for(var prop in startTimes) {
-        var startTime = moment.tz("2020-07-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        var endTime = moment.tz("2020-07-13 " + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var startTime = moment.tz("2021-07-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var endTime = moment.tz("2021-07-13 " + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
         
+        var startTime2 = moment.tz("2021-07-13 " + startTimes2[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var endTime2 = moment.tz("2021-07-13 " + startTimes2[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        
+
       var bold = false;
         if( bestDelta == i) {
           bold = true;
         theStr += "<b>"
       }
-      theStr += "Slot " + prop + " starts at " + formatTime(startTime) + " local time and ends at " + formatTime(endTime);
-          if(bestDelta == i) {
+      theStr += "<u>SLOT " + prop 
+        if(bestDelta == i) {
           wasBold = true;
-          theStr += "</b><br>"
+          theStr += "</b>"
       }
       else {
-          theStr += "<br>"
+          theStr += ""
       }
+        
+      theStr += "</u> coursework is " + 
+                '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
+                  formatTime(endTime)+'</span> local time;';
+      theStr += "<br>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp; projects are " + 
+                '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
+                  formatTime(endTime2)+'</span> local time;';
+      theStr += "<br>"
       i++;
     }
     document.getElementById('times').innerHTML = theStr;
