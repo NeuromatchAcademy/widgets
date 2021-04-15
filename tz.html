@@ -27,19 +27,19 @@
 
 <span style = "font-size:13pt;"><i> Your local timezone:</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
 </select>
-<br>
-<span style = "font-size:13pt;"><i> Course times:</i></span>
-<br>
-
+<br><br>
+<p><span style = "font-size:13pt;"><i> Course times:</i></span></p>
 <div id="times">
 
 </div>
 
 <div>
-<br>Most people in your timezone choose the slot in <b>bold</b>,
+<br/>People in your timezone often choose the slot in <b>bold</b>,
  but you can choose whichever slot best fits your schedule!
-<br>
-  If you have issues with the website please try Chrome.
+</div>
+<div>
+    <br>
+  * If you have issues with the website please try the Chrome browser.
 </div>
 
 <script>
@@ -290,7 +290,7 @@ const _t = (s) => {
     var bestDelta = deltas.indexOf(Math.min.apply(Math, deltas));
   
   
-    var theStr = "";
+    var theStr = "<p>";
     var i = 0;
     for(var prop in startTimes) {
         var startTime = moment.tz("2021-07-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
@@ -313,14 +313,25 @@ const _t = (s) => {
       else {
           theStr += ""
       }
-        
+      if (prop==1 || prop==3){
       theStr += "</u> coursework is " + 
                 '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
                   formatTime(endTime)+'</span> local time;';
       theStr += "<br>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp; projects are " + 
                 '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
                   formatTime(endTime2)+'</span> local time;';
-      theStr += "<br>"
+                }
+    else {
+        theStr += "</u> projects are " + 
+                '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
+                  formatTime(endTime2)+'</span> local time;';
+        theStr += "<br>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp; coursework is " + 
+                '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
+                  formatTime(endTime)+'</span> local time;';
+      
+
+    }
+    theStr += "</p>"
       i++;
     }
     document.getElementById('times').innerHTML = theStr;
