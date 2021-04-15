@@ -313,24 +313,23 @@ const _t = (s) => {
       else {
           theStr += ""
       }
-      if (prop==1 || prop==3 || prop==5){
-      theStr += "</u> coursework is " + 
-                '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
-                  formatTime(endTime)+'</span> local time;';
-      theStr += "<br>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp; projects are " + 
-                '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
-                  formatTime(endTime2)+'</span> local time;';
-                }
-    else {
+      if(prop.valueOf() === new String("2").valueOf() || prop.valueOf() === new String("4").valueOf()){
         theStr += "</u> projects are " + 
                 '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
                   formatTime(endTime2)+'</span> local time;';
         theStr += "<br>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp; coursework is " + 
                 '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
                   formatTime(endTime)+'</span> local time;';
-      
-
     }
+    else {    
+    theStr += "</u> coursework is " + 
+                '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
+                  formatTime(endTime)+'</span> local time;';
+      theStr += "<br>&ensp;&ensp;&ensp;&ensp;&ensp;&ensp; projects are " + 
+                '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
+                  formatTime(endTime2)+'</span> local time;';
+                }
+                
     theStr += "</p>"
       i++;
     }
