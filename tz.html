@@ -278,6 +278,12 @@ const _t = (s) => {
                         '3': ['13:00', '16:00'],
                         '4': ['14:00', '17:00'],
                         '5': ['23:00', '02:00']}
+    
+    var regions = {'1': 'Eastern Asia / Australia',
+                   '2': 'Middle East / India',
+                   '3': 'Europe / Africa',
+                   '4': 'Eastern Americas',
+                   '5': 'Western Americas'}
 
     
 
@@ -305,7 +311,7 @@ const _t = (s) => {
           bold = true;
         theStr += "<b>"
       }
-      theStr += "<u>SLOT " + prop 
+      theStr += "<u>SLOT " + prop + "(daytime in " + regions[prop] + ")"
         if(bestDelta == i) {
           wasBold = true;
           theStr += "</b>"
