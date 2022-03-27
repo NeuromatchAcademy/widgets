@@ -218,7 +218,7 @@ const _t = (s) => {
     .reduce((memo, tz) => {
       memo.push({
         name: tz,
-        offset: moment.tz(tz).utcOffset()
+        offset: moment("2022-07-11").tz(tz).utcOffset()
       });
       
       return memo;
@@ -227,7 +227,7 @@ const _t = (s) => {
       return a.offset - b.offset
     })
     .reduce((memo, tz) => {
-      const timezone = tz.offset ? moment.tz(tz.name).format('Z') : '';
+      const timezone = tz.offset ? moment("2022-07-11").tz(tz.name).format('Z') : '';
   
       return memo.concat(`<option value="${tz.name}">(GMT${timezone}) ${_t(tz.name)}</option>`);
     }, "");
