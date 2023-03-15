@@ -50,7 +50,7 @@ Gross regional fee adjustments are based on GDP per capita from
 <span style = "font-size:13pt;"><i> Will your tuition fee be paid for or reimbursed by your employer or supervisor? </i></span> <select class="js-Selector2" onchange="onChange()" id='fund'>
 </select>
 <br>
-<span style = "font-size:13pt;"><i> Which course are you taking? </i></span> <select class="js-Selector3" onchange="onChange()" id='coures'>
+<span style = "font-size:13pt;"><i> Which course are you taking? </i></span> <select class="js-Selector3" onchange="onChange()" id='course'>
 </select>
 <br><br>
 <p><span style = "font-size:13pt;"><i> Course tuition fee:</i></span></p>
@@ -337,6 +337,7 @@ const _t = (s) => {
   opt.value = 890;
   opt.text = 'Deep Learning';
   select3.add(opt);
+  var opt = document.createElement('option');
   opt.value = 890;
   opt.text = 'Computational Neuroscience';
   select3.add(opt);
