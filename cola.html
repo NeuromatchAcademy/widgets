@@ -49,6 +49,9 @@ Gross regional fee adjustments are based on GDP per capita from
 <br>
 <span style = "font-size:13pt;"><i> Will your tuition fee be paid for or reimbursed by your employer or supervisor? </i></span> <select class="js-Selector2" onchange="onChange()" id='fund'>
 </select>
+<br>
+<span style = "font-size:13pt;"><i> Which course are you taking? </i></span> <select class="js-Selector3" onchange="onChange()" id='coures'>
+</select>
 <br><br>
 <p><span style = "font-size:13pt;"><i> Course tuition fee:</i></span></p>
 <div id="costs">
@@ -327,6 +330,20 @@ const _t = (s) => {
   opt.value = 0.0;
   opt.text = 'No';
   select2.add(opt);
+    
+    
+  var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
+  var opt = document.createElement('option');
+  opt.value = 890;
+  opt.text = 'Deep Learning';
+  select2.add(opt);
+  opt.value = 890;
+  opt.text = 'Computational Neuroscience';
+  select2.add(opt);
+  var opt = document.createElement('option');
+  opt.value = 600;
+  opt.text = 'Computational Climate Science: Data to Action';
+  select2.add(opt);
 
   //document.querySelector(".js-Selector").value = "Europe/Brussels";
   
@@ -334,8 +351,9 @@ const _t = (s) => {
     var country = document.getElementById('country').value
     var job = document.getElementById('job').value
     var fund = document.getElementById('fund').value
+    var course = document.getElementById('course').value
     
-    theStr = (country * 800.0 * (0.5 + 0.5*fund) + country * 1200.0 * job * fund) + ' USD'
+    theStr = (country * course * (0.5 + 0.5*fund) + country * 1200.0 * job * fund) + ' USD'
     
     document.getElementById('costs').innerHTML = theStr;
   }
