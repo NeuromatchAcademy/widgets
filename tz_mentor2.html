@@ -259,7 +259,8 @@ const _t = (s) => {
   function onChange() {
     var startDates = {'FRIDAY': ['21',], 
                       'MONDAY': ['24',],
-                      'TUESDAY': ['25',]
+                      'TUESDAY': ['25',],
+                      'WEDNESDAY': ['26',]
                     }
     
     var startTimes21 = {'2': ['10:00', '13:00'],
@@ -303,7 +304,7 @@ const _t = (s) => {
       theStr += "<u>" + prop + ", JULY " + startDates[prop][0] + " <br>"
 
 
-      if(prop.valueOf() === new String("FRIDAY").valueOf()){
+      if(prop.valueOf() === new String("FRIDAY").valueOf() || prop.valueOf() === new String("TUESDAY").valueOf()){
         for(var hrop in startTimes21) {
         var startTime2 = moment.tz("2023-07-21 " + startTimes21[hrop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
         var endTime2 = moment.tz("2023-07-21 " + startTimes21[hrop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
@@ -314,21 +315,10 @@ const _t = (s) => {
       }
       }
 
-      if(prop.valueOf() === new String("MONDAY").valueOf()){
+      if(prop.valueOf() === new String("MONDAY").valueOf() || prop.valueOf() === new String("WEDNESDAY").valueOf()){
         for(var hrop in startTimes24) {
         var startTime2 = moment.tz("2023-07-21 " + startTimes24[hrop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
         var endTime2 = moment.tz("2023-07-21 " + startTimes24[hrop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        
-        theStr += '</u>'+ '<span style = "color:' + clrs[hrop] +';font-family:monospace;font-size:12pt;">' +
-                  "<br><b>Slot " + hrop + ": " + '</b></span>' + formatTime(startTime2) + " - " + 
-                  formatTime(endTime2)+'</span> local time;';      
-      }
-      }
-
-      if(prop.valueOf() === new String("TUESDAY").valueOf()){
-        for(var hrop in startTimes25) {
-        var startTime2 = moment.tz("2023-07-21 " + startTimes25[hrop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        var endTime2 = moment.tz("2023-07-21 " + startTimes25[hrop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
         
         theStr += '</u>'+ '<span style = "color:' + clrs[hrop] +';font-family:monospace;font-size:12pt;">' +
                   "<br><b>Slot " + hrop + ": " + '</b></span>' + formatTime(startTime2) + " - " + 

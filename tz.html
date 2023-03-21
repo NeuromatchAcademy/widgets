@@ -17,15 +17,15 @@
         <div class="card-body">
 
 <div>
-    <br/>Students and TAs work on <span style = "color:blue"><b>synchronous coursework</b></span>
-    and <span style = "color:red"><b>projects</b></span> in times below. (Mentors help in 
- <span style = "color:red">projects</span> time only. )
+    <br/>Students and Teaching Assistants work on <span style = "color:#f0ba7d"><b>synchronous coursework</b></span>
+    and <span style = "color:#e18256"><b>projects</b></span> in times below. Professional development activities take place during 
+ <span style = "color:#e18256">project</span> time only.
  See times for coursework and projects in each slot below 
  in your local timezone. <br>
 <br>
 </div>
 
-<span style = "font-size:13pt; color:green; font-weight:bold"><i> CHOOSE YOUR TIMEZONE (based on July 2022):</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
+<span style = "font-size:13pt; color:#313f76; font-weight:bold"><i> CHOOSE YOUR TIMEZONE (based on July 2022):</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
 </select>
 <br><br>
 <p><span style = "font-size:13pt;"><i> Course times:</i></span></p>
@@ -321,18 +321,18 @@ const _t = (s) => {
       }
       if(prop.valueOf() === new String("1").valueOf() || prop.valueOf() === new String("3").valueOf() || prop.valueOf() === new String("4").valueOf()){
         theStr += "</u> projects are " + 
-                '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
+                '<span style = "color:#e18256;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
                   formatTime(endTime2)+'</span> local time;';
         theStr += "<br> coursework is " + 
-                '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
+                '<span style = "color:#f0ba7d;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
                   formatTime(endTime)+'</span> local time;';
     }
     else {    
     theStr += "</u> coursework is " + 
-                '<span style = "color:blue;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
+                '<span style = "color:#f0ba7d;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " + 
                   formatTime(endTime)+'</span> local time;';
       theStr += "<br> projects are " + 
-                '<span style = "color:red;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
+                '<span style = "color:#e18256;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " + 
                   formatTime(endTime2)+'</span> local time;';
                 }
                 
