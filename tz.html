@@ -61,7 +61,7 @@
 <br>
 </div>
 
-<span class="timezone-header"><i>CHOOSE YOUR TIMEZONE (based on July 2024):</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
+<span class="timezone-header"><i>CHOOSE YOUR TIMEZONE (based on Jan 2024):</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
 </select>
 <br><br>
 <p><span style = "font-size:13pt;"><i> Course times:</i></span></p>
@@ -254,7 +254,7 @@ const _t = (s) => {
     .reduce((memo, tz) => {
       memo.push({
         name: tz,
-        offset: moment("2024-07-11").tz(tz).utcOffset()
+        offset: moment("2024-01-11").tz(tz).utcOffset()
       });
 
       return memo;
@@ -263,7 +263,7 @@ const _t = (s) => {
       return a.offset - b.offset
     })
     .reduce((memo, tz) => {
-      const timezone = tz.offset ? moment("2024-07-11").tz(tz.name).format('Z') : '';
+      const timezone = tz.offset ? moment("2024-01-11").tz(tz.name).format('Z') : '';
 
       return memo.concat(`<option value="${tz.name}">(GMT${timezone}) ${_t(tz.name)}</option>`);
     }, "");
@@ -325,7 +325,7 @@ const _t = (s) => {
 
       var deltas = []
       for(var prop in startTimes0) {
-        var startTime0 = moment.tz("2024-07-13 " + startTimes0[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var startTime0 = moment.tz("2024-01-13 " + startTimes0[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
       var fracHour = Number(startTime0.substr(0, 2)) + Number(startTime0.substr(3, 2)) / 60.0;
       deltas.push(Math.abs(fracHour - 8.6));
     }
@@ -335,11 +335,11 @@ const _t = (s) => {
     var theStr = "<p>";
     var i = 0;
     for(var prop in startTimes) {
-        var startTime = moment.tz("2024-07-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        var endTime = moment.tz("2024-07-13 " + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var startTime = moment.tz("2024-01-13 " + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var endTime = moment.tz("2024-01-13 " + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
 
-        var startTime2 = moment.tz("2024-07-13 " + startTimes2[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        var endTime2 = moment.tz("2024-07-13 " + startTimes2[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var startTime2 = moment.tz("2024-01-13 " + startTimes2[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
+        var endTime2 = moment.tz("2024-01-13 " + startTimes2[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
 
       var bold = false;
         if( bestDelta == i) {
