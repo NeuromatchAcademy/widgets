@@ -313,8 +313,9 @@ const _t = (s) => {
   function onChange() {
     var country = document.getElementById('country').value
     var course = document.getElementById('course').value
-    var lead_ta = course[0]
-    var ta = course[1]
+    console.log(course);
+    var lead_ta = course[0];
+    var ta = course[1];
     
     theStr = (country * lead_ta) + '/' + (country * ta) + ' USD' + ' (LeadTA/TA)
     
