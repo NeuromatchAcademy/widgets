@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>TA Payment</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+<body>
+
+
+<div class="container" style="max-width: 800px;">
+    <div class="card" style="margin-top: 50px;">
+        <h5 class="card-header">Cost adjustment by location</h5>
+        <div class="card-body">
+
+<div>
+<br> We determine your pay based on your location.
+    Please select the menus below to see your pay. 
+<br>
+ <br>
+    Pay Transparency Note:
+Gross regional pay adjustments are based on GDP per capita from 
+    <a href=https://data.worldbank.org/indicator/NY.GDP.PCAP.CD>WorldBank</a>. 
+    Although a flawed measure that leaves out wealth inequality as a factor, 
+    it is the best available indicator we could find to make payment more 
+    equitable and accessible across countries and regions, one of the core 
+    tenets of NMA.
+
+<br>
+</div>
+<br>
+<span style = "font-size:13pt;"><i> Country of residence:</i></span> <select class="js-Selector0" onchange="onChange()" id='country'>
+</select>
+<br>
+<span style = "font-size:13pt;"><i> Which course are you TAing? </i></span> <select class="js-Selector3" onchange="onChange()" id='course'>
+</select>
+<br><br>
+<p><span style = "font-size:13pt;"><i> TA Payment:</i></span></p>
+<div id="costs">
+
+</div>
+
+<div>
+    <br>
+  * If you have issues with the website please try the Chrome browser.
+    <br>
+    If you have any questions please email us nma@neuromatch.io
+</div>
+
+<script>
+// Adapted from https://matall.in/posts/building-an-usable-timezone-selector/ 
+
+const _t = (s) => {
+    if (i18n !== void 0 && i18n[s]) {
+      return i18n[s];
+    }
+  
+    return s;
+  };
+  
+  const countries = [
+  "Baseline Fee", 1.0,
+"Afghanistan", 0.1,
+"Aland Islands", 1.0,
+"Albania", 0.1,
+"Algeria", 0.1,
+"American Samoa", 0.2,
+"Andorra", 0.9,
+"Angola", 0.1,
+"Antigua and Barbuda", 0.3,
+"Argentina", 0.2,
+"Armenia", 0.1,
+"Aruba", 0.5,
+"Australia", 1.0,
+"Austria", 1.0,
+"Azerbaijan", 0.2,
+"Bahamas", 0.6,
+"Bahrain", 0.4,
+"Bangladesh", 0.1,
+"Barbados", 0.3,
+"Belarus", 0.2,
+"Belgium", 0.9,
+"Belize", 0.1,
+"Benin", 0.1,
+"Bermuda", 1.0,
+"Bhutan", 0.1,
+"Bolivia", 0.1,
+"Bonaire", 0.4,
+"Bosnia and Herzegovina", 0.2,
+"Botswana", 0.2,
+"Brazil", 0.2,
+"British Virgin Islands", 0.6,
+"Brunei", 0.6,
+"Bulgaria", 0.2,
+"Burkina Faso", 0.1,
+"Burundi", 0.1,
+"Cabo Verde", 0.1,
+"Cambodia", 0.1,
+"Cameroon", 0.1,
+"Canada", 1.0,
+"Cayman Islands", 1.0,
+"Central African Republic", 0.1,
+"Chad", 0.1,
+"Chile", 0.3,
+"China", 0.2,
+"Colombia", 0.2,
+"Costa Rica", 0.2,
+"Croatia", 0.3,
+"Curacao", 0.4,
+"Cyprus", 0.6,
+"Czechia", 0.5,
+"Democratic Republic of the Congo", 0.1,
+"Denmark", 1.0,
+"Djibouti", 0.1,
+"Dominica", 0.2,
+"Dominican Republic", 0.2,
+"Ecuador", 0.1,
+"Egypt", 0.1,
+"El Salvador", 0.1,
+"Equatorial Guinea", 0.2,
+"Eritrea", 0.1,
+"Estonia", 0.4,
+"Eswatini", 0.1,
+"Ethiopia", 0.1,
+"Faroe Islands", 1.0,
+"Fiji", 0.1,
+"Finland", 0.9,
+"France", 0.8,
+"French Guiana", 0.1,
+"French Polynesia", 0.3,
+"Gabon", 0.2,
+"Gambia", 0.1,
+"Georgia", 0.1,
+"Germany", 0.9,
+"Ghana", 0.1,
+"Gibraltar", 1.0,
+"Greece", 0.5,
+"Greenland", 0.9,
+"Grenada", 0.2,
+"Guadeloupe", 0.5,
+"Guam", 0.6,
+"Guatemala", 0.1,
+"Guinea", 0.1,
+"Guinea-Bissau", 0.1,
+"Guyana", 0.2,
+"Haiti", 0.1,
+"Honduras", 0.1,
+"Hungary", 0.4,
+"Iceland", 1.0,
+"India", 0.1,
+"Indonesia", 0.1,
+"Iran", 0.0,
+"Iraq", 0.1,
+"Ireland", 1.0,
+"Isle of Man", 1.0,
+"Israel", 0.7,
+"Italy", 0.7,
+"Ivory Coast", 0.1,
+"Jamaica", 0.1,
+"Japan", 0.9,
+"Jersey", 1.0,
+"Jordan", 0.1,
+"Kazakhstan", 0.3,
+"Kenya", 0.1,
+"Kosovo", 0.1,
+"Kuwait", 0.6,
+"Kyrgyzstan", 0.1,
+"Laos", 0.1,
+"Latvia", 0.3,
+"Lebanon", 0.1,
+"Lesotho", 0.1,
+"Liberia", 0.1,
+"Libya", 0.2,
+"Liechtenstein", 1.0,
+"Lithuania", 0.4,
+"Luxembourg", 1.0,
+"Madagascar", 0.1,
+"Malawi", 0.1,
+"Malaysia", 0.3,
+"Maldives", 0.2,
+"Mali", 0.1,
+"Malta", 0.6,
+"Martinique", 0.5,
+"Mauritania", 0.1,
+"Mauritius", 0.2,
+"Mexico", 0.2,
+"Micronesia", 0.1,
+"Moldova", 0.1,
+"Monaco", 1.0,
+"Mongolia", 0.1,
+"Montenegro", 0.2,
+"Montserrat", 0.2,
+"Morocco", 0.1,
+"Mozambique", 0.1,
+"Myanmar", 0.1,
+"Namibia", 0.1,
+"Nepal", 0.1,
+"Netherlands", 1.0,
+"New Caledonia", 0.3,
+"New Zealand", 0.7,
+"Nicaragua", 0.1,
+"Niger", 0.1,
+"Nigeria", 0.1,
+"Niue", 0.3,
+"North Macedonia", 0.1,
+"Northern Mariana Islands", 0.4,
+"Norway", 1.0,
+"Oman", 0.3,
+"Pakistan", 0.1,
+"Palau", 0.3,
+"Palestinian Territory", 0.1,
+"Panama", 0.3,
+"Papua New Guinea", 0.1,
+"Paraguay", 0.1,
+"Peru", 0.2,
+"Philippines", 0.1,
+"Poland", 0.4,
+"Portugal", 0.5,
+"Puerto Rico", 0.5,
+"Qatar", 1.0,
+"Republic of the Congo", 0.1,
+"Reunion", 0.1,
+"Romania", 0.3,
+"Russia", 0.3,
+"Rwanda", 0.1,
+"Saint Kitts and Nevis", 0.4,
+"Saint Lucia", 0.2,
+"Saint Vincent and the Grenadines", 0.2,
+"Samoa", 0.1,
+"San Marino", 0.9,
+"Sao Tome and Principe", 0.1,
+"Saudi Arabia", 0.4,
+"Senegal", 0.1,
+"Serbia", 0.2,
+"Seychelles", 0.3,
+"Sierra Leone", 0.1,
+"Singapore", 1.0,
+"Sint Maarten", 0.5,
+"Slovakia", 0.4,
+"Slovenia", 0.5,
+"Solomon Islands", 0.1,
+"Somalia", 0.1,
+"South Africa", 0.2,
+"South Korea", 0.6,
+"South Sudan", 0.1,
+"Spain", 0.6,
+"Sri Lanka", 0.1,
+"Sudan", 0.1,
+"Suriname", 0.2,
+"Svalbard and Jan Mayen", 1.0,
+"Sweden", 1.0,
+"Switzerland", 1.0,
+"Taiwan", 0.4,
+"Tajikistan", 0.1,
+"Tanzania", 0.1,
+"Thailand", 0.2,
+"Timor Leste", 0.1,
+"Togo", 0.1,
+"Tonga", 0.1,
+"Trinidad and Tobago", 0.3,
+"Tunisia", 0.1,
+"Turkey", 0.3,
+"Turkmenistan", 0.2,
+"Turks and Caicos Islands", 0.5,
+"Tuvalu", 0.1,
+"U.S. Virgin Islands", 0.6,
+"Uganda", 0.1,
+"Ukraine", 0.1,
+"United Arab Emirates", 0.8,
+"United Kingdom", 0.8,
+"United States", 1.0,
+"Uruguay", 0.3,
+"Uzbekistan", 0.1,
+"Vatican", 0.4,
+"Venezuela", 0.1,
+"Vietnam", 0.1,
+"Western Sahara", 0.1,
+"Yemen", 0.1,
+"Zambia", 0.1,
+"Zimbabwe", 0.1
+];
+    
+  var select0 = document.querySelector(".js-Selector0"); //.innerHTML = "";
+
+  for(var i = 0; i < countries.length/2; i++) {
+    var opt = document.createElement('option');
+    opt.value = countries[2*i+1];
+    opt.text = countries[2*i];
+    select0.add(opt);
+  }  
+    
+  var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
+  var opt = document.createElement('option');
+  opt.value = 890;
+  opt.text = 'Deep Learning';
+  select3.add(opt);
+  var opt = document.createElement('option');
+  opt.value = 890;
+  opt.text = 'Computational Neuroscience';
+  select3.add(opt);
+  var opt = document.createElement('option');
+  opt.value = 600;
+  opt.text = 'Computational Tools for Climate Science';
+  select3.add(opt);
+
+  //document.querySelector(".js-Selector").value = "Europe/Brussels";
+  
+  function onChange() {
+    var country = document.getElementById('country').value
+    var course = document.getElementById('course').value
+    
+    theStr = (country * course) + ' USD'
+    
+    document.getElementById('costs').innerHTML = theStr;
+  }
+  
+  onChange();
+
+</script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+</div>
+</div>
+</div>
+</body></html>
