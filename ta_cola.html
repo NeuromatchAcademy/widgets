@@ -312,8 +312,7 @@ const _t = (s) => {
   
   function onChange() {
     var country = document.getElementById('country').value
-    var course = document.getElementById('course').value
-    console.log(course);
+    var course = document.getElementById('course').value.split(",")
     var lead_ta = course[0];
     var ta = course[1];
     
