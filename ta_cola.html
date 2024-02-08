@@ -292,15 +292,19 @@ const _t = (s) => {
     
   var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
   var opt = document.createElement('option');
-  opt.value = 890;
+  opt.value = [2250, 1715];
   opt.text = 'Deep Learning';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 890;
+  opt.value = [2250, 1715];
   opt.text = 'Computational Neuroscience';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 600;
+  opt.value = [1500, 1143];
+  opt.text = 'Computational Tools for Climate Science';
+  select3.add(opt);
+  var opt = document.createElement('option');
+  opt.value = [1500, 1143];
   opt.text = 'Computational Tools for Climate Science';
   select3.add(opt);
 
@@ -309,8 +313,10 @@ const _t = (s) => {
   function onChange() {
     var country = document.getElementById('country').value
     var course = document.getElementById('course').value
+    var lead_ta = course[0]
+    var ta = course[2]
     
-    theStr = (country * course) + ' USD'
+    theStr = (country * lead_ta) + '/' + (country * ta) + ' USD' + ' (LeadTA/TA)
     
     document.getElementById('costs').innerHTML = theStr;
   }
