@@ -313,11 +313,10 @@ const _t = (s) => {
   function onChange() {
     var country = document.getElementById('country').value
     var course = document.getElementById('course').value
-    console.log(course);
     var lead_ta = course[0];
     var ta = course[1];
     
-    theStr = (country * lead_ta) + '/' + (country * ta) + ' USD' + ' (LeadTA/TA)
+    theStr = (country * lead_ta) + '/' + (country * ta) + ' USD' + ' (LeadTA/TA)'
     
     document.getElementById('costs').innerHTML = theStr;
   }
