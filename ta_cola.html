@@ -316,7 +316,7 @@ const _t = (s) => {
     var lead_ta = course[0];
     var ta = course[1];
     
-    theStr = Math.round(country * lead_ta) + ' USD' + ' / ' + Math.round(country * ta) + ' USD' + ' -- (LeadTA/TA)'
+    theStr = Math.round((country * lead_ta + lead_ta)/2) + ' USD' + ' / ' + Math.round(((country * ta + ta)/2) + ' USD' + ' -- (LeadTA/TA)'
     
     document.getElementById('costs').innerHTML = theStr;
   }
