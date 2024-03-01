@@ -358,7 +358,7 @@ const _t = (s) => {
     var fund = document.getElementById('fund').value
     var course = document.getElementById('course').value
     
-    theStr = (country * course * (0.5 + 0.5*fund) + country * course * 0.574 / 0.426 * job * fund) + ' USD'
+    theStr = Math.Floor(country * course * (0.5 + 0.5*fund) + country * course * 0.574 / 0.426 * job * fund) + ' USD'
     
     document.getElementById('costs').innerHTML = theStr;
   }
