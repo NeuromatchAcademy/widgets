@@ -334,19 +334,19 @@ const _t = (s) => {
     
   var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
   var opt = document.createElement('option');
-  opt.value = 890;
+  opt.value = 925;
   opt.text = 'Deep Learning';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 890;
+  opt.value = 925;
   opt.text = 'Computational Neuroscience';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 600;
+  opt.value = 617;
   opt.text = 'Computational Tools for Climate Science';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 600;
+  opt.value = 617;
   opt.text = 'NeuroAI';
   select3.add(opt);
 
@@ -358,7 +358,7 @@ const _t = (s) => {
     var fund = document.getElementById('fund').value
     var course = document.getElementById('course').value
     
-    theStr = (country * course * (0.5 + 0.5*fund) + country * 1200.0 * job * fund) + ' USD'
+    theStr = (country * course * (0.5 + 0.5*fund) + country * course * 0.574 / 0.426 * job * fund) + ' USD'
     
     document.getElementById('costs').innerHTML = theStr;
   }
