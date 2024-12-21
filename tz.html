@@ -354,22 +354,22 @@ const _t = (s) => {
       else {
           theStr += ""
       }
-      if(prop.valueOf() === new String("1").valueOf() || prop.valueOf() === new String("3").valueOf() || prop.valueOf() === new String("4").valueOf()){
-        theStr += "</u> projects are " +
-                '<span style = "color:#FF7676;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " +
-                  formatTime(endTime2)+'</span> local time;';
-        theStr += "<br> coursework is " +
-                '<span style = "color:#000000;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " +
-                  formatTime(endTime)+'</span> local time;';
-    }
-    else {
+    //   if(prop.valueOf() === new String("1").valueOf() || prop.valueOf() === new String("3").valueOf() || prop.valueOf() === new String("4").valueOf()){
+    //     theStr += "</u> projects are " +
+    //             '<span style = "color:#FF7676;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " +
+    //               formatTime(endTime2)+'</span> local time;';
+    //     theStr += "<br> coursework is " +
+    //             '<span style = "color:#000000;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " +
+    //               formatTime(endTime)+'</span> local time;';
+    // }
+    // else {
     theStr += "</u> coursework is " +
                 '<span style = "color:#000000;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " +
                   formatTime(endTime)+'</span> local time;';
       theStr += "<br> projects are " +
                 '<span style = "color:#FF7676;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " +
                   formatTime(endTime2)+'</span> local time;';
-                }
+                // }
 
     theStr += "</p>"
       i++;
