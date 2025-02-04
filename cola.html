@@ -15,28 +15,17 @@
         <div class="card-body">
 
 <div>
-<br> We determine your tuition fee based on your career position, 
-    funding status (especially whether you can be reimbursed or have your 
-    supervisor or company pay on your behalf), and location.
-    Please select the menus below to see your fee. 
-    Note, once you are accepted to the course you will have the option to reduce your 
-    payment or waive the fee if necessary due to financial circumstances. 
-    We offer the waiver to all students because we know that not everyone 
-    has the funds to pay. However if you can plan to pay even part of the 
-    fee without hardship, we would ask you to please do so. Practically all of the
-    money that we collect is used to pay the excellent TAs who will be working full 
-    time for a month to guide you through the course materials.
+<br> At Neuromatch, our mission is to democratize education and research in the computational sciences globally. Our course fees are essential to sustaining our programs, with the majority of the fees directly supporting the Teaching Assistants (TAs) who dedicate an entire month to teaching you. Without these course fees, Neuromatch would not be able to operate.
 <br>
- <br>
-    Fee Transparency Note:
-Gross regional fee adjustments are based on GDP per capita from 
-    <a href=https://data.worldbank.org/indicator/NY.GDP.PCAP.CD>WorldBank</a>. 
-    Although a flawed measure that leaves out wealth inequality as a factor, 
-    it is the best available indicator we could find to make fees more 
-    equitable and accessible across countries and regions, one of the core 
-    tenets of NMA. Ability to pay the fee, or a fraction of it, <b>does not</b> affect
-    the status of your application or acceptance into NMA.
-
+<br> To ensure accessibility, we use a regional fee adjustment model based on GDP per capita data from the <a href=https://data.worldbank.org/indicator/NY.GDP.PCAP.CD>WorldBank</a>. This model allows participants from diverse socioeconomic and geographical backgrounds to access our courses, making high-quality education truly global. 
+<br>
+<br> Most participants are able to secure reimbursement for the course fee from their institution or employer as part of professional development programs. If you need assistance in requesting reimbursement, we provide an instruction guide in our payment portal.
+<br>
+<br> If you are unable to secure reimbursement after exploring all available options, we will reduce your course fee by 50%. In exceptional circumstances, individuals who cannot afford the reduced fee may apply for an additional hardship discount through the payment portal.
+<br>
+<br> Please note that a non-refundable processing fee (also subject to regional fee adjustments) is required to cover administrative costs.
+<br>
+Please use the menus below to view your course fee. 
 
 <br>
 </div>
@@ -53,19 +42,30 @@ Gross regional fee adjustments are based on GDP per capita from
 <span style = "font-size:13pt;"><i> Which course are you taking? </i></span> <select class="js-Selector3" onchange="onChange()" id='course'>
 </select>
 <br><br>
-<p><span style = "font-size:13pt;"><i> Course tuition fee**:</i></span></p>
-<div id="costs">
-
-</div>
+<p>
+  <div style="display: flex; justify-content: space-between; max-width: 350px;">
+    <span style = "font-size:13pt;">Base course fee:</span><span id="costs"></span>
+  </div>
+</p>
+<p>
+  <div style="display: flex; justify-content: space-between; max-width: 350px;">
+    <span style = "font-size:13pt;"><i>Processing fee (non-refundable):</i></span><span id="processing-costs"></span>
+  </div>
+</p>
+<p>
+  <div style="display: flex; justify-content: space-between; max-width: 350px;">
+    <span style = "font-size:13pt;"><b>Total course fee:</b></span><span id="total-costs"></span>
+  </div>
+</p>
 
 <div>
     <br>
   * If you have issues with the website please try the Chrome browser.
     <br>
- ** The discounted price based on your above selections is reflected in the portal through sequential discounts. If the price is not what you were expecting, select "I can't comfortably afford this price".
-    <br>
-    If you have any questions please email us nma@neuromatch.io
+  If you have any questions please email us <a href="mailto:nma@neuromatch.io" target="_blank">nma@neuromatch.io</a>
 </div>
+
+
 
 <script>
 // Adapted from https://matall.in/posts/building-an-usable-timezone-selector/ 
@@ -336,19 +336,19 @@ const _t = (s) => {
     
   var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
   var opt = document.createElement('option');
-  opt.value = 925;
+  opt.value = 995;
   opt.text = 'Deep Learning';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 925;
+  opt.value = 995;
   opt.text = 'Computational Neuroscience';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 617;
+  opt.value = 695;
   opt.text = 'Computational Tools for Climate Science';
   select3.add(opt);
   var opt = document.createElement('option');
-  opt.value = 617;
+  opt.value = 695;
   opt.text = 'NeuroAI';
   select3.add(opt);
 
@@ -360,9 +360,12 @@ const _t = (s) => {
     var fund = document.getElementById('fund').value
     var course = document.getElementById('course').value
     
-    theStr = Math.floor(country * course * (0.5 + 0.5*fund) + country * course * 0.574 / 0.426 * job * fund) + ' USD'
-    
-    document.getElementById('costs').innerHTML = theStr;
+    baseCost = Math.floor(country * course * (0.5 + 0.5*fund) + country * course * 0.574 / 0.426 * job * fund)
+    processingCost = Math.floor(country * 50)
+    totalCost = Math.floor(baseCost + processingCost)
+    document.getElementById('costs').innerHTML = '$' + baseCost + ' USD';
+    document.getElementById('processing-costs').innerHTML = '$' + processingCost + ' USD';
+    document.getElementById('total-costs').innerHTML = '$' + totalCost + ' USD';
   }
   
   onChange();
