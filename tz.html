@@ -1,394 +1,751 @@
 <!doctype html>
 <html lang="en">
 <head>
-<title>Slot selector</title>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-    <style>
-      .project-text {
-        color: #FF7676;
-      }
-      .course-text {
-        color: #000000;
-      }
-      .timezone-header {
-        font-size: 13pt;
-        color: #333333;
-        font-weight: bold;
-      }
-      .card-header {
-        background-color: #ABBAC1;
-      }
-      .container {
-        max-width: 700px;
-        padding: 0;
-        margin: auto;
-      }
-      .card {
-        margin: 0px;
-        border: none;
-      }
-      @media (max-width: 500px) {
-        .timezone-header {
-          font-size: 10pt;
-        }
-        .js-Selector {
-          max-width: 100%;
-        }
-        .container {
-          max-width: 100%;
-        }
-      }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Time slot selector</title>
+<script>
+  // Set theme and iframe mode before first paint.
+  // ?theme=light (default) | dark | auto (follows the viewer's OS setting)
+  (function () {
+    var root = document.documentElement;
+    var theme = 'light';
+    try {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'auto') theme = t;
+    } catch (e) {}
+    root.setAttribute('data-theme', theme);
+    var inFrame = true;
+    try { inFrame = window.self !== window.top; } catch (e) {}
+    if (inFrame) root.classList.add('in-frame');
+  })();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --page: #ffffff;
+    --surface: #ffffff;
+    --panel: #f4f6f7;
+    --border: #d9e0e3;
+    --border-strong: #b7c3c8;
+    --header-bg: #abbac1;
+    --header-text: #1c272c;
+    --text: #1f2529;
+    --muted: #5a666c;
+    --course: #2b3a42;
+    --project: #c43d3d;          /* darker than #FF7676 so text passes contrast */
+    --project-fill: #ff7676;     /* original brand coral, used for the bar */
+    --night: #e7ebed;
+    --accent: #2e6a86;
+    --on-accent: #ffffff;
+    --recommended-bg: #eef5f9;
+    --input-bg: #ffffff;
+    --slot-inset: 17px;          /* slot border + horizontal padding; the scale uses it too */
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --page: #161b1e;
+    --surface: #1c2226;
+    --panel: #232a2f;
+    --border: #333d43;
+    --border-strong: #4a565d;
+    --header-bg: #3d4b52;
+    --header-text: #eef3f5;
+    --text: #e6ebee;
+    --muted: #a3afb5;
+    --course: #d8e2e7;
+    --project: #ff8a8a;
+    --project-fill: #ff7676;
+    --night: #2b3338;
+    --accent: #7fb6d1;
+    --on-accent: #10222b;
+    --recommended-bg: #1f2d35;
+    --input-bg: #1a2024;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] {
+      --page: #161b1e;
+      --surface: #1c2226;
+      --panel: #232a2f;
+      --border: #333d43;
+      --border-strong: #4a565d;
+      --header-bg: #3d4b52;
+      --header-text: #eef3f5;
+      --text: #e6ebee;
+      --muted: #a3afb5;
+      --course: #d8e2e7;
+      --project: #ff8a8a;
+      --project-fill: #ff7676;
+      --night: #2b3338;
+      --accent: #7fb6d1;
+      --on-accent: #10222b;
+      --recommended-bg: #1f2d35;
+      --input-bg: #1a2024;
+      color-scheme: dark;
+    }
+  }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--page);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Inside the portal's iframe: no outer padding so the frame can hug the widget */
+  html.in-frame body { padding: 0; background: transparent; }
+  html.in-frame .widget { max-width: none; }
+
+  .widget {
+    max-width: 700px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .widget-header { background: var(--header-bg); padding: 14px 20px; }
+  .widget-header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--header-text); }
+  .widget-body { padding: 20px; }
+
+  .intro { margin: 0 0 20px; max-width: 62ch; }
+  .course-word { color: var(--course); font-weight: 600; }
+  .project-word { color: var(--project); font-weight: 600; }
+
+  /* Controls */
+  .controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px auto;
+    gap: 14px 16px;
+    align-items: start;
+    padding: 16px;
+    background: var(--panel);
+    border-radius: 8px;
+  }
+  .field-label {
+    display: block;
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  select {
+    width: 100%;
+    font: inherit;
+    padding: 8px 10px;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+  }
+  select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .hint { margin: 6px 0 0; font-size: .85rem; color: var(--muted); }
+  .hint button {
+    font: inherit; color: var(--accent); background: none; border: 0; padding: 0;
+    text-decoration: underline; cursor: pointer;
+  }
+  .hint button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .segmented { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+  .segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .segmented label {
+    padding: 8px 14px; cursor: pointer; background: var(--input-bg); color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .segmented label + input + label { border-left: 1px solid var(--border-strong); }
+  .segmented input:checked + label { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -4px; }
+
+  @media (max-width: 560px) {
+    .controls { grid-template-columns: 1fr auto; }
+    .field-tz { grid-column: 1 / -1; }
+  }
+
+  /* Results */
+  .basis { margin: 18px 0 10px; font-size: .9rem; color: var(--muted); }
+
+  .scale {
+    position: relative;
+    height: 1.4em;
+    margin: 0 var(--slot-inset) 4px;
+    font-size: .75rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .scale span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
+  .scale span:first-child { transform: none; }
+  .scale span:last-child { transform: translateX(-100%); }
+
+  .slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .slot {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px calc(var(--slot-inset) - 1px);
+  }
+  .slot.is-recommended {
+    border: 2px solid var(--accent);
+    padding: 13px calc(var(--slot-inset) - 2px);
+    background: var(--recommended-bg);
+  }
+  .slot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: 10px; }
+  .slot-name { font-weight: 700; }
+  .slot-region { color: var(--muted); font-size: .9rem; }
+  .badge {
+    margin-left: auto;
+    font-size: .8rem;
+    font-weight: 600;
+    padding: 1px 10px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  /* 24-hour strip of the viewer's local day */
+  .day {
+    position: relative;
+    height: 14px;
+    border-radius: 3px;
+    background:
+      linear-gradient(to right,
+        var(--night) 0 29.1667%, transparent 29.1667% 91.6667%, var(--night) 91.6667% 100%),
+      var(--panel);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .day::after { /* quarter-day guides */
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(to right, transparent 0 calc(25% - 1px), var(--border) calc(25% - 1px) 25%);
+    pointer-events: none;
+  }
+  .seg { position: absolute; top: 0; bottom: 0; border-radius: 2px; z-index: 1; }
+  .seg.course { background: var(--course); }
+  .seg.project { background: var(--project-fill); }
+
+  .times { margin: 0; display: grid; gap: 2px; }
+  .row { display: grid; grid-template-columns: 7.5rem 1fr; gap: 8px; align-items: baseline; }
+  .row dt { font-size: .9rem; font-weight: 600; }
+  .row dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .row.course dt, .row.course dd { color: var(--course); }
+  .row.project dt, .row.project dd { color: var(--project); }
+  .next-day { margin-left: 6px; font-size: .8rem; font-weight: 500; color: var(--muted); }
+
+  @media (max-width: 420px) {
+    .row { grid-template-columns: 1fr; gap: 0; margin-bottom: 4px; }
+  }
+
+  .footnote { margin: 16px 0 0; font-size: .9rem; color: var(--muted); }
+</style>
 </head>
 <body>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.25.3/moment-with-locales.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.41/moment-timezone-with-data-10-year-range.min.js"></script>
 
+<div class="widget">
+  <header class="widget-header">
+    <h1>Time slot selector</h1>
+  </header>
 
-<div class="container">
-    <div class="card">
-        <h5 class="card-header">Time slot selector</h5>
-        <div class="card-body">
+  <div class="widget-body">
+    <p class="intro">
+      Students and TAs work on <span class="course-word">synchronous coursework</span> and
+      <span class="project-word">projects</span> during the times below. Mentors help during project time only.
+      Choose your time zone to see every slot in your local time.
+    </p>
 
-<div>
-    <br/>Students and TAs work on <span class="course-text"><b>synchronous coursework</b></span>
-    and <span class="project-text"><b>projects</b></span> during the times below. (Mentors help in
- <span class="project-text">projects</span> time only. )
- See times for coursework and projects in each slot below
- in your local timezone. <br>
-<br>
-</div>
+    <div class="controls">
+      <div class="field-tz">
+        <label class="field-label" for="tz">Your time zone</label>
+        <select id="tz"></select>
+        <p class="hint" id="tz-hint"></p>
+      </div>
+      <div>
+        <label class="field-label" for="year">Course year</label>
+        <select id="year"></select>
+      </div>
+      <fieldset>
+        <legend class="field-label">Clock</legend>
+        <div class="segmented">
+          <input type="radio" name="clock" id="clock-12" value="12">
+          <label for="clock-12">12h</label>
+          <input type="radio" name="clock" id="clock-24" value="24">
+          <label for="clock-24">24h</label>
+        </div>
+      </fieldset>
+    </div>
 
-<span class="timezone-header"><i id="timezone-label">CHOOSE YOUR TIMEZONE:</i></span> <select class="js-Selector" onchange="onChange()" id='timezone'>
-</select>
-<br><br>
-<p><span style = "font-size:13pt;"><i> Course times:</i></span></p>
-<div id="times">
+    <p class="basis" id="basis" aria-live="polite"></p>
 
-</div>
+    <div class="scale" id="scale" aria-hidden="true"></div>
+    <ol class="slots" id="slots"></ol>
 
-<div>
-<br/>People in your timezone often choose the slot in <b>bold</b>,
- but you can choose whichever slot best fits your schedule!
-</div>
-<div>
-    <br>
-  * If you have issues with the website please try the Chrome browser.
+    <p class="footnote">
+      The recommended slot is the one people in your time zone usually choose,
+      but you can pick whichever slot fits your schedule best.
+    </p>
+  </div>
 </div>
 
 <script>
-// Adapted from https://matall.in/posts/building-an-usable-timezone-selector/
-document.querySelector('.timezone-header i').textContent = 
-  `CHOOSE YOUR TIMEZONE (based on July ${moment().year()}):`;
-    
-const _t = (s) => {
-    if (i18n !== void 0 && i18n[s]) {
-      return i18n[s];
-    }
+(() => {
+  'use strict';
 
-    return s;
+  /* ------------------------------------------------------------------
+   * Schedule configuration. All times are UTC on the reference date.
+   * An end time earlier than its start time means "the next day".
+   * ------------------------------------------------------------------ */
+  const CONFIG = {
+    referenceMonth: 7,          // July
+    referenceDay: 1,
+    idealLocalStartHour: 8.6,   // recommend the slot whose coursework starts nearest 8:36 local
+    slots: [
+      { id: 1, region: 'Eastern Asia / Australia', coursework: ['00:30', '05:00'], projects: ['06:00', '09:00'] },
+      { id: 2, region: 'Middle East / India',      coursework: ['04:30', '09:00'], projects: ['10:00', '13:00'] },
+      { id: 3, region: 'Europe / Africa',          coursework: ['08:00', '12:30'], projects: ['13:30', '16:30'] },
+      { id: 4, region: 'Eastern Americas',         coursework: ['13:00', '17:30'], projects: ['18:30', '21:30'] },
+      { id: 5, region: 'Western Americas',         coursework: ['17:00', '21:30'], projects: ['22:30', '01:30'] }
+    ]
   };
 
-  const timezones = [
-    "Etc/GMT+12",
-    "Pacific/Midway",
-    "Pacific/Honolulu",
-    "America/Juneau",
-    "America/Dawson",
-    "America/Boise",
-    "America/Chihuahua",
-    "America/Phoenix",
-    "America/Chicago",
-    "America/Regina",
-    "America/Mexico_City",
-    "America/Belize",
-    "America/Detroit",
-    "America/Indiana/Indianapolis",
-    "America/Bogota",
-    "America/Glace_Bay",
-    "America/Caracas",
-    "America/Santiago",
-    "America/St_Johns",
-    "America/Sao_Paulo",
-    "America/Argentina/Buenos_Aires",
-    "America/Godthab",
-    "Etc/GMT+2",
-    "Atlantic/Azores",
-    "Atlantic/Cape_Verde",
-    "Europe/London",
-    "Africa/Casablanca",
-    "Atlantic/Canary",
-    "Europe/Belgrade",
-    "Europe/Sarajevo",
-    "Europe/Brussels",
-    "Europe/Amsterdam",
-    "Africa/Algiers",
-    "Europe/Bucharest",
-    "Africa/Cairo",
-    "Europe/Helsinki",
-    "Europe/Athens",
-    "Asia/Jerusalem",
-    "Africa/Harare",
-    "Europe/Moscow",
-    "Asia/Kuwait",
-    "Africa/Nairobi",
-    "Asia/Baghdad",
-    "Asia/Tehran",
-    "Asia/Dubai",
-    "Asia/Baku",
-    "Asia/Kabul",
-    "Asia/Yekaterinburg",
-    "Asia/Karachi",
-    "Asia/Kolkata",
-    "Asia/Kathmandu",
-    "Asia/Dhaka",
-    "Asia/Colombo",
-    "Asia/Almaty",
-    "Asia/Rangoon",
-    "Asia/Bangkok",
-    "Asia/Krasnoyarsk",
-    "Asia/Shanghai",
-    "Asia/Kuala_Lumpur",
-    "Asia/Taipei",
-    "Australia/Perth",
-    "Asia/Irkutsk",
-    "Asia/Seoul",
-    "Asia/Tokyo",
-    "Asia/Yakutsk",
-    "Australia/Darwin",
-    "Australia/Adelaide",
-    "Australia/Sydney",
-    "Australia/Brisbane",
-    "Australia/Hobart",
-    "Asia/Vladivostok",
-    "Pacific/Guam",
-    "Asia/Magadan",
-    "Pacific/Fiji",
-    "Pacific/Auckland",
-    "Pacific/Tongatapu"
+  // Friendly names for common zones. Offsets are computed live, so they
+  // stay correct when a country changes its daylight saving rules.
+  const ZONES = [
+    ['Etc/GMT+12', 'International Date Line West'],
+    ['Pacific/Pago_Pago', 'American Samoa, Midway Island'],
+    ['Pacific/Honolulu', 'Hawaii'],
+    ['America/Anchorage', 'Alaska'],
+    ['America/Los_Angeles', 'Pacific Time (US and Canada), Tijuana'],
+    ['America/Phoenix', 'Arizona'],
+    ['America/Denver', 'Mountain Time (US and Canada)'],
+    ['America/Mazatlan', 'Mazatlán, La Paz (Baja California Sur)'],
+    ['America/Chicago', 'Central Time (US and Canada)'],
+    ['America/Regina', 'Saskatchewan'],
+    ['America/Mexico_City', 'Guadalajara, Mexico City, Monterrey'],
+    ['America/Chihuahua', 'Chihuahua'],
+    ['America/Guatemala', 'Central America'],
+    ['America/New_York', 'Eastern Time (US and Canada)'],
+    ['America/Indiana/Indianapolis', 'Indiana (East)'],
+    ['America/Bogota', 'Bogotá, Lima, Quito'],
+    ['America/Halifax', 'Atlantic Time (Canada)'],
+    ['America/Caracas', 'Caracas'],
+    ['America/La_Paz', 'La Paz (Bolivia), Georgetown'],
+    ['America/Santiago', 'Santiago'],
+    ['America/St_Johns', 'Newfoundland and Labrador'],
+    ['America/Sao_Paulo', 'Brasília, São Paulo'],
+    ['America/Argentina/Buenos_Aires', 'Buenos Aires'],
+    ['America/Nuuk', 'Greenland (Nuuk)'],
+    ['Etc/GMT+2', 'Mid-Atlantic'],
+    ['Atlantic/Azores', 'Azores'],
+    ['Atlantic/Cape_Verde', 'Cape Verde'],
+    ['UTC', 'Coordinated Universal Time'],
+    ['Atlantic/Reykjavik', 'Reykjavík, Accra, Monrovia'],
+    ['Europe/London', 'London, Dublin, Edinburgh, Lisbon'],
+    ['Atlantic/Canary', 'Canary Islands'],
+    ['Africa/Casablanca', 'Casablanca'],
+    ['Africa/Lagos', 'West Central Africa (Lagos, Algiers)'],
+    ['Europe/Paris', 'Brussels, Copenhagen, Madrid, Paris'],
+    ['Europe/Berlin', 'Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna'],
+    ['Europe/Prague', 'Belgrade, Bratislava, Budapest, Ljubljana, Prague'],
+    ['Europe/Warsaw', 'Sarajevo, Skopje, Warsaw, Zagreb'],
+    ['Africa/Johannesburg', 'Harare, Johannesburg, Pretoria'],
+    ['Africa/Cairo', 'Cairo'],
+    ['Europe/Bucharest', 'Bucharest'],
+    ['Europe/Helsinki', 'Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius'],
+    ['Europe/Athens', 'Athens'],
+    ['Asia/Jerusalem', 'Jerusalem'],
+    ['Europe/Istanbul', 'Istanbul'],
+    ['Europe/Minsk', 'Minsk'],
+    ['Europe/Moscow', 'Moscow, St. Petersburg, Volgograd'],
+    ['Asia/Riyadh', 'Kuwait, Riyadh'],
+    ['Africa/Nairobi', 'Nairobi'],
+    ['Asia/Baghdad', 'Baghdad'],
+    ['Asia/Tehran', 'Tehran'],
+    ['Asia/Dubai', 'Abu Dhabi, Dubai, Muscat'],
+    ['Asia/Baku', 'Baku, Tbilisi, Yerevan'],
+    ['Asia/Kabul', 'Kabul'],
+    ['Asia/Yekaterinburg', 'Yekaterinburg'],
+    ['Asia/Karachi', 'Islamabad, Karachi'],
+    ['Asia/Tashkent', 'Tashkent'],
+    ['Asia/Almaty', 'Astana, Almaty'],
+    ['Asia/Kolkata', 'Chennai, Kolkata, Mumbai, New Delhi'],
+    ['Asia/Colombo', 'Colombo'],
+    ['Asia/Kathmandu', 'Kathmandu'],
+    ['Asia/Dhaka', 'Dhaka'],
+    ['Asia/Yangon', 'Yangon'],
+    ['Asia/Bangkok', 'Bangkok, Hanoi, Jakarta'],
+    ['Asia/Novosibirsk', 'Novosibirsk'],
+    ['Asia/Krasnoyarsk', 'Krasnoyarsk'],
+    ['Asia/Shanghai', 'Beijing, Chongqing, Hong Kong, Urumqi'],
+    ['Asia/Singapore', 'Kuala Lumpur, Singapore'],
+    ['Asia/Manila', 'Manila'],
+    ['Asia/Taipei', 'Taipei'],
+    ['Australia/Perth', 'Perth'],
+    ['Asia/Irkutsk', 'Irkutsk'],
+    ['Asia/Ulaanbaatar', 'Ulaanbaatar'],
+    ['Asia/Seoul', 'Seoul'],
+    ['Asia/Tokyo', 'Osaka, Sapporo, Tokyo'],
+    ['Asia/Yakutsk', 'Yakutsk'],
+    ['Australia/Darwin', 'Darwin'],
+    ['Australia/Adelaide', 'Adelaide'],
+    ['Australia/Brisbane', 'Brisbane'],
+    ['Australia/Sydney', 'Canberra, Melbourne, Sydney'],
+    ['Australia/Hobart', 'Hobart'],
+    ['Pacific/Port_Moresby', 'Guam, Port Moresby'],
+    ['Asia/Vladivostok', 'Vladivostok'],
+    ['Asia/Magadan', 'Magadan'],
+    ['Pacific/Guadalcanal', 'Solomon Islands, New Caledonia'],
+    ['Pacific/Fiji', 'Fiji'],
+    ['Asia/Kamchatka', 'Kamchatka'],
+    ['Pacific/Auckland', 'Auckland, Wellington'],
+    ['Pacific/Tongatapu', 'Nuku’alofa'],
+    ['Pacific/Apia', 'Samoa'],
+    ['Pacific/Kiritimati', 'Kiritimati']
   ];
 
-  const i18n = {
-    "Etc/GMT+12": "International Date Line West",
-    "Pacific/Midway": "Midway Island, Samoa",
-    "Pacific/Honolulu": "Hawaii",
-    "America/Juneau": "Alaska",
-    "America/Dawson": "Pacific Time (US and Canada); Tijuana",
-    "America/Boise": "Mountain Time (US and Canada)",
-    "America/Chihuahua": "Chihuahua, La Paz, Mazatlan",
-    "America/Phoenix": "Arizona",
-    "America/Chicago": "Central Time (US and Canada)",
-    "America/Regina": "Saskatchewan",
-    "America/Mexico_City": "Guadalajara, Mexico City, Monterrey",
-    "America/Belize": "Central America",
-    "America/Detroit": "Eastern Time (US and Canada)",
-    "America/Indiana/Indianapolis": "Indiana (East)",
-    "America/Bogota": "Bogota, Lima, Quito",
-    "America/Glace_Bay": "Atlantic Time (Canada)",
-    "America/Caracas": "Caracas, La Paz",
-    "America/Santiago": "Santiago",
-    "America/St_Johns": "Newfoundland and Labrador",
-    "America/Sao_Paulo": "Brasilia",
-    "America/Argentina/Buenos_Aires": "Buenos Aires, Georgetown",
-    "America/Godthab": "Greenland",
-    "Etc/GMT+2": "Mid-Atlantic",
-    "Atlantic/Azores": "Azores",
-    "Atlantic/Cape_Verde": "Cape Verde Islands",
-    "Europe/London": "Dublin, Edinburgh, Lisbon, London",
-    "Africa/Casablanca": "Casablanca, Monrovia",
-    "Atlantic/Canary": "Canary Islands",
-    "Europe/Belgrade": "Belgrade, Bratislava, Budapest, Ljubljana, Prague",
-    "Europe/Sarajevo": "Sarajevo, Skopje, Warsaw, Zagreb",
-    "Europe/Brussels": "Brussels, Copenhagen, Madrid, Paris",
-    "Europe/Amsterdam": "Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna",
-    "Africa/Algiers": "West Central Africa",
-    "Europe/Bucharest": "Bucharest",
-    "Africa/Cairo": "Cairo",
-    "Europe/Helsinki": "Helsinki, Kiev, Riga, Sofia, Tallinn, Vilnius",
-    "Europe/Athens": "Athens, Istanbul, Minsk",
-    "Asia/Jerusalem": "Jerusalem",
-    "Africa/Harare": "Harare, Pretoria",
-    "Europe/Moscow": "Moscow, St. Petersburg, Volgograd",
-    "Asia/Kuwait": "Kuwait, Riyadh",
-    "Africa/Nairobi": "Nairobi",
-    "Asia/Baghdad": "Baghdad",
-    "Asia/Tehran": "Tehran",
-    "Asia/Dubai": "Abu Dhabi, Muscat",
-    "Asia/Baku": "Baku, Tbilisi, Yerevan",
-    "Asia/Kabul": "Kabul",
-    "Asia/Yekaterinburg": "Ekaterinburg",
-    "Asia/Karachi": "Islamabad, Karachi, Tashkent",
-    "Asia/Kolkata": "Chennai, Kolkata, Mumbai, New Delhi",
-    "Asia/Kathmandu": "Kathmandu",
-    "Asia/Dhaka": "Astana, Dhaka",
-    "Asia/Colombo": "Sri Jayawardenepura",
-    "Asia/Almaty": "Almaty, Novosibirsk",
-    "Asia/Rangoon": "Yangon Rangoon",
-    "Asia/Bangkok": "Bangkok, Hanoi, Jakarta",
-    "Asia/Krasnoyarsk": "Krasnoyarsk",
-    "Asia/Shanghai": "Beijing, Chongqing, Hong Kong SAR, Urumqi",
-    "Asia/Kuala_Lumpur": "Kuala Lumpur, Singapore",
-    "Asia/Taipei": "Taipei",
-    "Australia/Perth": "Perth",
-    "Asia/Irkutsk": "Irkutsk, Ulaanbaatar",
-    "Asia/Seoul": "Seoul",
-    "Asia/Tokyo": "Osaka, Sapporo, Tokyo",
-    "Asia/Yakutsk": "Yakutsk",
-    "Australia/Darwin": "Darwin",
-    "Australia/Adelaide": "Adelaide",
-    "Australia/Sydney": "Canberra, Melbourne, Sydney",
-    "Australia/Brisbane": "Brisbane",
-    "Australia/Hobart": "Hobart",
-    "Asia/Vladivostok": "Vladivostok",
-    "Pacific/Guam": "Guam, Port Moresby",
-    "Asia/Magadan": "Magadan, Solomon Islands, New Caledonia",
-    "Pacific/Fiji": "Fiji Islands, Kamchatka, Marshall Islands",
-    "Pacific/Auckland": "Auckland, Wellington",
-    "Pacific/Tongatapu": "Nuku'alofa"
+  /* ------------------------------------------------------------------
+   * Embedding. Set PARENT_ORIGIN to your portal's origin, for example
+   * 'https://apply.example.org', so messages only go to that page.
+   * URL parameters the portal can pass: ?tz=Europe/Paris&year=2027&clock=24&theme=auto
+   * ------------------------------------------------------------------ */
+  const PARENT_ORIGIN = '*';
+  const IN_FRAME = document.documentElement.classList.contains('in-frame');
+  const params = new URLSearchParams(location.search);
+
+  function postToParent(message) {
+    if (!IN_FRAME) return;
+    try { window.parent.postMessage(message, PARENT_ORIGIN); } catch (e) { /* ignore */ }
   }
 
-  const selectorOptions = moment.tz.names()
-    .filter(tz => {
-      return timezones.includes(tz)
-    })
-    .reduce((memo, tz) => {
-      memo.push({
-        name: tz,
-        offset: moment().month(6).date(1).tz(tz).utcOffset()
-      });
+  const STORAGE_PREFIX = 'slotSelector:';
+  const store = {
+    get(key) { try { return localStorage.getItem(STORAGE_PREFIX + key); } catch (e) { return null; } },
+    set(key, value) { try { localStorage.setItem(STORAGE_PREFIX + key, value); } catch (e) { /* ignore */ } }
+  };
 
-      return memo;
-    }, [])
-    .sort((a, b) => {
-      return a.offset - b.offset
-    })
-    .reduce((memo, tz) => {
-      const timezone = tz.offset ? moment().month(6).date(1).tz(tz.name).format('Z') : '';
+  const $ = (id) => document.getElementById(id);
+  const tzSelect = $('tz');
+  const yearSelect = $('year');
+  const tzHint = $('tz-hint');
+  const basis = $('basis');
+  const slotList = $('slots');
+  const scale = $('scale');
 
-      return memo.concat(`<option value="${tz.name}">(GMT${timezone}) ${_t(tz.name)}</option>`);
-    }, "");
+  /* ---------------- Time zone helpers (built on Intl, no libraries) ---------------- */
 
-  document.querySelector(".js-Selector").innerHTML = selectorOptions;
+  const formatterCache = new Map();
+  function formatterFor(tz) {
+    if (!formatterCache.has(tz)) {
+      formatterCache.set(tz, new Intl.DateTimeFormat('en-US', {
+        timeZone: tz, hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+      }));
+    }
+    return formatterCache.get(tz);
+  }
 
-  /*
-  $(".js-Selector").on("change", e => {
-    const timestamp = dateTimeUtc.unix();
-    const offset = moment.tz(e.target.value).utcOffset() * 60;
-    const dateTimeLocal = moment.unix(timestamp + offset).utc();
+  function isValidZone(tz) {
+    try { formatterFor(tz); return true; } catch (e) { return false; }
+  }
 
-    document.querySelector(".js-TimeLocal").innerHTML = dateTimeLocal.format("ddd, DD MMM YYYY HH:mm:ss");
-  });
-  */
+  // Wall-clock reading of an instant in a given zone.
+  function wallClock(date, tz) {
+    const p = {};
+    for (const part of formatterFor(tz).formatToParts(date)) p[part.type] = part.value;
+    return {
+      year: Number(p.year), month: Number(p.month), day: Number(p.day),
+      hour: Number(p.hour) % 24, minute: Number(p.minute)
+    };
+  }
 
-  document.querySelector(".js-Selector").value = "";
+  const dayNumber = (w) => Date.UTC(w.year, w.month - 1, w.day) / 86400000;
 
-  function formatTime(time) {
-      if(time == '00:00') {
-        return '00:00 (midnight)';
-    } else if(time == '12:00') {
-        return '12:00 (noon)';
+  function offsetMinutes(tz, date) {
+    const w = wallClock(date, tz);
+    return Math.round((Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute) - date.getTime()) / 60000);
+  }
+
+  function formatOffset(minutes) {
+    if (minutes === 0) return 'GMT';
+    const sign = minutes < 0 ? '−' : '+';
+    const abs = Math.abs(minutes);
+    return `GMT${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+  }
+
+  function referenceDate(year) {
+    return new Date(Date.UTC(year, CONFIG.referenceMonth - 1, CONFIG.referenceDay, 12, 0));
+  }
+
+  function utcInstant(year, hhmm, extraDays = 0) {
+    const [h, m] = hhmm.split(':').map(Number);
+    return new Date(Date.UTC(year, CONFIG.referenceMonth - 1, CONFIG.referenceDay + extraDays, h, m));
+  }
+
+  function localRange(year, [startUtc, endUtc], tz) {
+    const start = utcInstant(year, startUtc);
+    let end = utcInstant(year, endUtc);
+    if (end <= start) end = utcInstant(year, endUtc, 1);
+    const ws = wallClock(start, tz);
+    const we = wallClock(end, tz);
+    return {
+      start: ws,
+      end: we,
+      hours: (end - start) / 3600000,
+      crossesMidnight: dayNumber(we) > dayNumber(ws)
+    };
+  }
+
+  function formatTime(w, clock) {
+    const mm = String(w.minute).padStart(2, '0');
+    let text = clock === '24'
+      ? `${String(w.hour).padStart(2, '0')}:${mm}`
+      : `${w.hour % 12 === 0 ? 12 : w.hour % 12}:${mm} ${w.hour < 12 ? 'AM' : 'PM'}`;
+    if (w.minute === 0 && w.hour === 0) text += ' (midnight)';
+    if (w.minute === 0 && w.hour === 12) text += ' (noon)';
+    return text;
+  }
+
+  function circularDistance(a, b) {
+    const d = Math.abs(a - b) % 24;
+    return Math.min(d, 24 - d);
+  }
+
+  /* ---------------- Controls ---------------- */
+
+  const detectedZone = (() => {
+    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; }
+  })();
+
+  const defaultClock = (() => {
+    try {
+      const hc = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hourCycle;
+      return hc === 'h11' || hc === 'h12' ? '12' : '24';
+    } catch (e) { return '12'; }
+  })();
+
+  function buildYearOptions() {
+    const current = new Date().getFullYear();
+    const years = [current - 1, current, current + 1];
+    const fromUrl = Number(params.get('year'));
+    const saved = Number(store.get('year'));
+    const chosen = [fromUrl, saved].find((y) => years.includes(y)) || current;
+    yearSelect.replaceChildren(...years.map((y) => new Option(String(y), String(y))));
+    yearSelect.value = String(chosen);
+  }
+
+  function buildZoneOptions(year, preferred) {
+    const ref = referenceDate(year);
+
+    const curated = ZONES
+      .filter(([tz]) => isValidZone(tz))
+      .map(([tz, label]) => ({ tz, label, offset: offsetMinutes(tz, ref) }))
+      .sort((a, b) => a.offset - b.offset || a.label.localeCompare(b.label));
+    const curatedIds = new Set(curated.map((z) => z.tz));
+
+    let others = [];
+    if (typeof Intl.supportedValuesOf === 'function') {
+      others = Intl.supportedValuesOf('timeZone')
+        .filter((tz) => !curatedIds.has(tz) && isValidZone(tz));
+    }
+    if (detectedZone && !curatedIds.has(detectedZone) && !others.includes(detectedZone) && isValidZone(detectedZone)) {
+      others.push(detectedZone);
+    }
+    others.sort((a, b) => a.localeCompare(b));
+
+    const common = document.createElement('optgroup');
+    common.label = 'Common time zones';
+    for (const z of curated) {
+      common.append(new Option(`(${formatOffset(z.offset)}) ${z.label}`, z.tz));
+    }
+
+    const groups = [common];
+    if (others.length) {
+      const all = document.createElement('optgroup');
+      all.label = 'All time zones by name';
+      for (const tz of others) {
+        all.append(new Option(`${tz.replace(/_/g, ' ')} (${formatOffset(offsetMinutes(tz, ref))})`, tz));
+      }
+      groups.push(all);
+    }
+    tzSelect.replaceChildren(...groups);
+
+    const candidates = [preferred, detectedZone, 'UTC'];
+    const valid = new Set([...curatedIds, ...others]);
+    tzSelect.value = candidates.find((tz) => tz && valid.has(tz)) || curated[0].tz;
+  }
+
+  function currentClock() {
+    const checked = document.querySelector('input[name="clock"]:checked');
+    return checked ? checked.value : defaultClock;
+  }
+
+  function updateHint() {
+    tzHint.replaceChildren();
+    if (!detectedZone) return;
+    if (tzSelect.value === detectedZone) {
+      tzHint.textContent = 'Detected from your device.';
     } else {
-        if(time > '12:00') {
-            return time + " (" + (Number(time.substr(0, 2)) - 12) + ':' + (time.substr(3, 2) + 'PM') + ")";
-        } else {
-            return time;
-        }
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = `Use my device’s time zone (${detectedZone.replace(/_/g, ' ')})`;
+      btn.addEventListener('click', () => {
+        tzSelect.value = detectedZone;
+        store.set('tz', detectedZone);
+        render();
+      });
+      tzHint.append(btn);
     }
   }
 
-  function onChange() {
-    var startTimes0 = {'1': ['00:30', '09:00'],
-                      '2': ['04:30', '13:00'],
-                      '3': ['08:00', '16:30'],
-                      '4': ['13:00', '21:30'],
-                      '5': ['17:00', '01:30']}
+  /* ---------------- Rendering ---------------- */
 
-    var startTimes = {'1': ['00:30', '05:00'],
-                        '2': ['04:30', '09:00'],
-                        '3': ['08:00', '12:30'],
-                        '4': ['13:00', '17:30'],
-                        '5': ['17:00', '21:30']}
-
-    var startTimes2 = {'1': ['06:00', '09:00'],
-                        '2': ['10:00', '13:00'],
-                        '3': ['13:30', '16:30'],
-                        '4': ['18:30', '21:30'],
-                        '5': ['22:30', '01:30']}
-
-    var regions = {'1': 'Eastern Asia / Australia',
-                   '2': 'Middle East / India',
-                   '3': 'Europe / Africa',
-                   '4': 'Eastern Americas',
-                   '5': 'Western Americas'}
-
-
-
-      var deltas = []
-      for(var prop in startTimes0) {
-        var startTime0 = moment.tz(`${moment().year()}-07-01 ` + startTimes0[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-      var fracHour = Number(startTime0.substr(0, 2)) + Number(startTime0.substr(3, 2)) / 60.0;
-      deltas.push(Math.abs(fracHour - 8.6));
-    }
-    var bestDelta = deltas.indexOf(Math.min.apply(Math, deltas));
-
-
-    var theStr = "<p>";
-    var i = 0;
-    for(var prop in startTimes) {
-        var startTime = moment.tz(`${moment().year()}-07-01 ` + startTimes[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        var endTime = moment.tz(`${moment().year()}-07-01 ` + startTimes[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-
-        var startTime2 = moment.tz(`${moment().year()}-07-01 ` + startTimes2[prop][0], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-        var endTime2 = moment.tz(`${moment().year()}-07-01 ` + startTimes2[prop][1], "UTC").clone().tz(document.getElementById('timezone').value).format().substr(11, 5);
-
-      var bold = false;
-        if( bestDelta == i) {
-          bold = true;
-        theStr += "<b>"
-      }
-      theStr += "<u>SLOT " + prop + " (daytime in " + regions[prop] + ") <br>"
-        if(bestDelta == i) {
-          wasBold = true;
-          theStr += "</b>"
-      }
-      else {
-          theStr += ""
-      }
-    //   if(prop.valueOf() === new String("1").valueOf() || prop.valueOf() === new String("3").valueOf() || prop.valueOf() === new String("4").valueOf()){
-    //     theStr += "</u> projects are " +
-    //             '<span style = "color:#FF7676;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " +
-    //               formatTime(endTime2)+'</span> local time;';
-    //     theStr += "<br> coursework is " +
-    //             '<span style = "color:#000000;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " +
-    //               formatTime(endTime)+'</span> local time;';
-    // }
-    // else {
-        
-    theStr += "</u> coursework is " +
-                '<span style = "color:#000000;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime) + " - " +
-                  formatTime(endTime)+'</span> local time;';
-      theStr += "<br> projects are " +
-                '<span style = "color:#FF7676;font-weight:bold;font-family:monospace;font-size:12pt;">' + formatTime(startTime2) + " - " +
-                  formatTime(endTime2)+'</span> local time;';
-                // }
-
-    theStr += "</p>"
-      i++;
-    }
-    document.getElementById('times').innerHTML = theStr;
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
   }
 
-  onChange();
+  function addSegments(bar, range, kind) {
+    const startHour = range.start.hour + range.start.minute / 60;
+    const pieces = startHour + range.hours > 24
+      ? [[startHour, 24], [0, startHour + range.hours - 24]]
+      : [[startHour, startHour + range.hours]];
+    for (const [from, to] of pieces) {
+      const seg = el('span', `seg ${kind}`);
+      seg.style.left = `${(from / 24) * 100}%`;
+      seg.style.width = `${((to - from) / 24) * 100}%`;
+      bar.append(seg);
+    }
+  }
 
+  function timeRow(kind, label, range, clock) {
+    const row = el('div', `row ${kind}`);
+    const dd = el('dd', null, `${formatTime(range.start, clock)} – ${formatTime(range.end, clock)}`);
+    if (range.crossesMidnight) dd.append(el('span', 'next-day', 'ends next day'));
+    row.append(el('dt', null, label), dd);
+    return row;
+  }
 
+  function renderScale(clock) {
+    const labels = clock === '24'
+      ? ['00:00', '06:00', '12:00', '18:00', '24:00']
+      : ['12 AM', '6 AM', '12 PM', '6 PM', '12 AM'];
+    scale.replaceChildren(...labels.map((t, i) => {
+      const span = el('span', null, t);
+      span.style.left = `${i * 25}%`;
+      return span;
+    }));
+  }
+
+  function render() {
+    const tz = tzSelect.value;
+    const year = Number(yearSelect.value);
+    const clock = currentClock();
+    const ref = referenceDate(year);
+
+    const month = new Intl.DateTimeFormat('en-US', { month: 'long', timeZone: 'UTC' }).format(ref);
+    basis.textContent =
+      `Times for ${month} ${CONFIG.referenceDay}, ${year}, when your time zone is ${formatOffset(offsetMinutes(tz, ref))}. ` +
+      'Daylight saving time is included. The bars show where each slot falls in your day; shaded parts are 10 PM to 7 AM.';
+
+    const computed = CONFIG.slots.map((slot) => {
+      const coursework = localRange(year, slot.coursework, tz);
+      const projects = localRange(year, slot.projects, tz);
+      const startHour = coursework.start.hour + coursework.start.minute / 60;
+      return { slot, coursework, projects, distance: circularDistance(startHour, CONFIG.idealLocalStartHour) };
+    });
+    const best = computed.reduce((a, b) => (b.distance < a.distance ? b : a));
+
+    renderScale(clock);
+
+    slotList.replaceChildren(...computed.map((item) => {
+      const li = el('li', 'slot');
+      const isBest = item === best;
+      if (isBest) li.classList.add('is-recommended');
+
+      const head = el('div', 'slot-head');
+      head.append(
+        el('span', 'slot-name', `Slot ${item.slot.id}`),
+        el('span', 'slot-region', `Daytime in ${item.slot.region}`)
+      );
+      if (isBest) head.append(el('span', 'badge', 'Recommended'));
+
+      const bar = el('div', 'day');
+      bar.setAttribute('aria-hidden', 'true');
+      addSegments(bar, item.coursework, 'course');
+      addSegments(bar, item.projects, 'project');
+
+      const dl = el('dl', 'times');
+      dl.append(
+        timeRow('course', 'Coursework', item.coursework, clock),
+        timeRow('project', 'Projects', item.projects, clock)
+      );
+
+      li.append(head, bar, dl);
+      return li;
+    }));
+
+    updateHint();
+
+    postToParent({
+      type: 'slot-selector:change',
+      timeZone: tz,
+      year,
+      recommendedSlot: best.slot.id
+    });
+  }
+
+  // Report the widget's height so the portal can size the iframe with no inner scrollbar.
+  function watchHeight() {
+    if (!IN_FRAME) return;
+    let last = 0;
+    const report = () => {
+      const height = Math.ceil(document.body.getBoundingClientRect().height);
+      if (height !== last) {
+        last = height;
+        postToParent({ type: 'slot-selector:resize', height });
+      }
+    };
+    if (typeof ResizeObserver === 'function') new ResizeObserver(report).observe(document.body);
+    window.addEventListener('load', report);
+    report();
+  }
+
+  /* ---------------- Wiring ---------------- */
+
+  buildYearOptions();
+  const urlZone = params.get('tz');
+  buildZoneOptions(Number(yearSelect.value), urlZone && isValidZone(urlZone) ? urlZone : store.get('tz'));
+
+  const urlClock = params.get('clock');
+  const clockValue = (urlClock === '12' || urlClock === '24') ? urlClock : (store.get('clock') || defaultClock);
+  const clockInput = document.querySelector(`input[name="clock"][value="${clockValue}"]`);
+  if (clockInput) clockInput.checked = true;
+
+  tzSelect.addEventListener('change', () => {
+    store.set('tz', tzSelect.value);
+    render();
+  });
+
+  yearSelect.addEventListener('change', () => {
+    store.set('year', yearSelect.value);
+    // Offsets in the list depend on the year's daylight saving rules.
+    buildZoneOptions(Number(yearSelect.value), tzSelect.value);
+    render();
+  });
+
+  document.querySelectorAll('input[name="clock"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      store.set('clock', input.value);
+      render();
+    });
+  });
+
+  render();
+  watchHeight();
+})();
 </script>
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
-</div>
-</div>
-</div>
-</body></html>
+</body>
+</html>
