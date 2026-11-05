@@ -33,13 +33,14 @@
     --header-text: #1c272c;
     --text: #1f2529;
     --muted: #5a666c;
-    --course: #2b3a42;
-    --project: #c43d3d;          /* darker than #FF7676 so text passes contrast */
-    --project-fill: #ff7676;     /* original brand coral, used for the bar */
+    --course: #0076a0;           /* Neuromatch blue, deepened so small text stays readable */
+    --course-fill: #008cbf;      /* Neuromatch blue: coursework blocks on the timeline */
+    --project: #c43d3d;          /* Neuromatch blush, deepened so small text stays readable */
+    --project-fill: #fa7a7a;     /* Neuromatch blush: project blocks on the timeline */
     --night: #e7ebed;
-    --accent: #2e6a86;
+    --accent: #333333;           /* logo grey, so it doesn't compete with the blue */
     --on-accent: #ffffff;
-    --recommended-bg: #eef5f9;
+    --recommended-bg: #f5f5f5;
     --input-bg: #ffffff;
     --slot-inset: 17px;          /* slot border + horizontal padding; the scale uses it too */
     color-scheme: light;
@@ -54,13 +55,14 @@
     --header-text: #eef3f5;
     --text: #e6ebee;
     --muted: #a3afb5;
-    --course: #d8e2e7;
-    --project: #ff8a8a;
-    --project-fill: #ff7676;
+    --course: #5cc3ea;
+    --course-fill: #008cbf;
+    --project: #fa7a7a;
+    --project-fill: #fa7a7a;
     --night: #2b3338;
-    --accent: #7fb6d1;
-    --on-accent: #10222b;
-    --recommended-bg: #1f2d35;
+    --accent: #e6ebee;
+    --on-accent: #1c2226;
+    --recommended-bg: #262d32;
     --input-bg: #1a2024;
     color-scheme: dark;
   }
@@ -75,13 +77,14 @@
       --header-text: #eef3f5;
       --text: #e6ebee;
       --muted: #a3afb5;
-      --course: #d8e2e7;
-      --project: #ff8a8a;
-      --project-fill: #ff7676;
+      --course: #5cc3ea;
+      --course-fill: #008cbf;
+      --project: #fa7a7a;
+      --project-fill: #fa7a7a;
       --night: #2b3338;
-      --accent: #7fb6d1;
-      --on-accent: #10222b;
-      --recommended-bg: #1f2d35;
+      --accent: #e6ebee;
+      --on-accent: #1c2226;
+      --recommended-bg: #262d32;
       --input-bg: #1a2024;
       color-scheme: dark;
     }
@@ -223,7 +226,7 @@
     pointer-events: none;
   }
   .seg { position: absolute; top: 0; bottom: 0; border-radius: 2px; z-index: 1; }
-  .seg.course { background: var(--course); }
+  .seg.course { background: var(--course-fill); }
   .seg.project { background: var(--project-fill); }
 
   .times { margin: 0; display: grid; gap: 2px; }
