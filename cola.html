@@ -1,396 +1,474 @@
 <!doctype html>
 <html lang="en">
 <head>
-<title>course fee</title>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Course fee calculator</title>
+<script>
+  // ?theme=light (default) | dark | auto
+  (function () {
+    var root = document.documentElement;
+    var theme = 'light';
+    try {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'auto') theme = t;
+    } catch (e) {}
+    root.setAttribute('data-theme', theme);
+    var inFrame = true;
+    try { inFrame = window.self !== window.top; } catch (e) {}
+    if (inFrame) root.classList.add('in-frame');
+  })();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --page: #ffffff;
+    --surface: #ffffff;
+    --panel: #f4f6f7;
+    --border: #d9e0e3;
+    --border-strong: #b7c3c8;
+    --header-bg: #abbac1;
+    --header-text: #1c272c;
+    --text: #1f2529;
+    --muted: #5a666c;
+    --accent: #2e6a86;
+    --on-accent: #ffffff;
+    --total-bg: #eef5f9;
+    --input-bg: #ffffff;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --page: #161b1e; --surface: #1c2226; --panel: #232a2f; --border: #333d43; --border-strong: #4a565d;
+    --header-bg: #3d4b52; --header-text: #eef3f5; --text: #e6ebee; --muted: #a3afb5;
+    --accent: #7fb6d1; --on-accent: #10222b; --total-bg: #1f2d35; --input-bg: #1a2024;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] {
+      --page: #161b1e; --surface: #1c2226; --panel: #232a2f; --border: #333d43; --border-strong: #4a565d;
+      --header-bg: #3d4b52; --header-text: #eef3f5; --text: #e6ebee; --muted: #a3afb5;
+      --accent: #7fb6d1; --on-accent: #10222b; --total-bg: #1f2d35; --input-bg: #1a2024;
+      color-scheme: dark;
+    }
+  }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--page);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  html.in-frame body { padding: 0; background: transparent; }
+  html.in-frame .widget { max-width: none; }
+
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .widget {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .widget-header { background: var(--header-bg); padding: 14px 20px; }
+  .widget-header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--header-text); }
+  .widget-body { padding: 20px; }
+
+  .intro { margin: 0 0 20px; max-width: 64ch; }
+
+  /* Controls */
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px;
+    background: var(--panel);
+    border-radius: 8px;
+  }
+  .field-wide { grid-column: 1 / -1; }
+  @media (max-width: 560px) {
+    .controls { grid-template-columns: 1fr; }
+  }
+  .field-label {
+    display: block;
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  select {
+    width: 100%;
+    font: inherit;
+    padding: 8px 10px;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+  }
+  select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .segmented label {
+    padding: 7px 14px;
+    cursor: pointer;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+  }
+  .segmented input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Result */
+  .result { margin-top: 20px; }
+  .empty {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px;
+    color: var(--muted);
+  }
+  .fees {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .fee-row:first-child { border-top: 0; }
+  .fee-row dt { margin: 0; }
+  .fee-row dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fee-row.total { background: var(--total-bg); }
+  .fee-row.total dt { font-weight: 700; }
+  .fee-row.total dd { font-size: 1.25rem; font-weight: 700; }
+  .currency { font-size: .85em; font-weight: 500; color: var(--muted); margin-left: 4px; }
+
+  .explain { margin: 12px 0 0; font-size: .92rem; color: var(--muted); max-width: 64ch; }
+  .note {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: var(--panel);
+    font-size: .92rem;
+    max-width: 64ch;
+  }
+
+  /* About */
+  .about { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .about h2 { margin: 0 0 8px; font-size: 1rem; }
+  .about p { margin: 0 0 12px; max-width: 64ch; font-size: .95rem; }
+  .contact { margin: 20px 0 0; font-size: .92rem; color: var(--muted); }
+</style>
 </head>
 <body>
 
+<div class="widget">
+  <header class="widget-header">
+    <h1>Course fee calculator</h1>
+  </header>
 
-<div class="container" style="max-width: 800px;">
-    <div class="card" style="margin-top: 50px;">
-        <h5 class="card-header">Cost adjustment by location</h5>
-        <div class="card-body">
+  <div class="widget-body">
+    <p class="intro">
+      Our fees are adjusted by country so people everywhere can take part.
+      Choose your course and tell us a little about your situation to see what you’ll pay.
+    </p>
 
-<div>
-<br> At <a href="https://neuromatch.io/" target="_blank">Neuromatch</a>, our mission is to democratize education and research in the computational sciences globally. Our course fees are essential to sustaining our programs. The fees go directly to sustaining the Academy and supporting the Teaching Assistants (TAs) who dedicate an entire month to teaching you. Without these course fees, Neuromatch would not be able to operate.
-<br>
-<br><a href="https://neuromatch.io/courses/" target="_blank">Read more about Neuromatch Academy on our website.</a> 
-<br>
-<br> To ensure accessibility, we use a regional fee adjustment model based on GDP per capita data from the <a href=https://data.worldbank.org/indicator/NY.GDP.PCAP.CD>WorldBank</a>. This model allows participants from diverse socioeconomic and geographical backgrounds to access our courses, making high-quality education truly global. 
-<br>
-<br> Most professors and universities directly pay these fees from grants or education funds. Utilize our <a href="https://docs.neuromatch.io/p/EWjaSzD1pjoHRX/Neuromatch-Tuition-Toolkit" target="_blank">Tuition Toolkit</a> to start the conversation now with your supervisor about covering the cost of the course.
-<br>
-<br> If you are unable to secure reimbursement after exploring all available options, we will reduce your course fee by 50%. In exceptional circumstances, individuals who cannot afford the reduced fee may apply for an additional hardship discount through the payment portal.
-<br>
-<br> Please note that a non-refundable processing fee (also subject to regional fee adjustments) is required to cover administrative costs. You can find our Course Refund Policy <a href="https://docs.neuromatch.io/p/GJuBoDwfThwsFN/Course-Refund-Policy" target="_blank">here</a>.
-<br>
-<br> Please use the menus below to view your course fee. 
+    <div class="controls">
+      <div>
+        <label class="field-label" for="course">Course</label>
+        <select id="course"></select>
+      </div>
+      <div>
+        <label class="field-label" for="country">Country of residence</label>
+        <select id="country"></select>
+      </div>
+      <fieldset class="field-wide">
+        <legend class="field-label">Job type</legend>
+        <div class="segmented" id="job"></div>
+      </fieldset>
+      <fieldset class="field-wide">
+        <legend class="field-label">Will your employer or supervisor pay or reimburse your tuition?</legend>
+        <div class="segmented" id="funded"></div>
+      </fieldset>
+    </div>
 
-<br>
+    <div class="result" id="result" aria-live="polite"></div>
+
+    <section class="about">
+      <h2>About our fees</h2>
+      <p>
+        At <a href="https://neuromatch.io/" target="_blank" rel="noopener">Neuromatch</a>, our mission is to democratize
+        education and research in the computational sciences globally. Course fees go directly to sustaining the Academy
+        and supporting the Teaching Assistants (TAs) who dedicate an entire month to teaching you. Without them,
+        Neuromatch could not operate.
+        <a href="https://neuromatch.io/courses/" target="_blank" rel="noopener">Read more about Neuromatch Academy</a>.
+      </p>
+      <p>
+        To keep courses accessible, we adjust fees by region using GDP per capita data from the
+        <a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.CD" target="_blank" rel="noopener">World Bank</a>,
+        so participants from many socioeconomic and geographical backgrounds can join.
+      </p>
+      <p>
+        Most professors and universities pay these fees directly from grants or education funds. Use our
+        <a href="https://docs.neuromatch.io/p/EWjaSzD1pjoHRX/Neuromatch-Tuition-Toolkit" target="_blank" rel="noopener">Tuition Toolkit</a>
+        to start the conversation with your supervisor about covering the cost of the course.
+      </p>
+      <p>
+        If you can’t get reimbursed after exploring all available options, we reduce your course fee by 50%.
+        In exceptional circumstances, if you can’t afford the reduced fee, you can apply for an additional hardship
+        discount through the payment portal.
+      </p>
+      <p>
+        A non-refundable processing fee, also adjusted by region, covers administrative costs. See our
+        <a href="https://docs.neuromatch.io/p/GJuBoDwfThwsFN/Course-Refund-Policy" target="_blank" rel="noopener">Course Refund Policy</a>.
+      </p>
+      <p class="contact" id="rates-updated"></p>
+      <p class="contact">
+        Questions? Email <a href="mailto:nma@neuromatch.io">nma@neuromatch.io</a>.
+      </p>
+    </section>
+  </div>
 </div>
-<br>
-<span style = "font-size:13pt;"><i> Job type:</i></span> <select class="js-Selector1" onchange="onChange()" id='job'>
-</select>
-<br>
-<span style = "font-size:13pt;"><i> Country of residence:</i></span> <select class="js-Selector0" onchange="onChange()" id='country'>
-</select>
-<br>
-<span style = "font-size:13pt;"><i> Will your tuition fee be paid for or reimbursed by your employer or supervisor? </i></span> <select class="js-Selector2" onchange="onChange()" id='fund'>
-</select>
-<br>
-<span style = "font-size:13pt;"><i> Which course are you taking? </i></span> <select class="js-Selector3" onchange="onChange()" id='course'>
-</select>
-<br><br>
-<p>
-  <div style="display: flex; justify-content: space-between; max-width: 350px;">
-    <span style = "font-size:13pt;">Base course fee:</span><span id="costs"></span>
-  </div>
-</p>
-<p>
-  <div style="display: flex; justify-content: space-between; max-width: 350px;">
-    <span style = "font-size:13pt;"><i>Processing fee (non-refundable):</i></span><span id="processing-costs"></span>
-  </div>
-</p>
-<p>
-  <div style="display: flex; justify-content: space-between; max-width: 350px;">
-    <span style = "font-size:13pt;"><b>Total course fee:</b></span><span id="total-costs"></span>
-  </div>
-</p>
 
-<div>
-    <br>
-  * If you have issues with the website please try the Chrome browser.
-    <br>
-  If you have any questions please email us <a href="mailto:nma@neuromatch.io" target="_blank">nma@neuromatch.io</a>
-</div>
-
-
-
+<script src="rates.js?v=2026-11-05"></script>
 <script>
-// Adapted from https://matall.in/posts/building-an-usable-timezone-selector/ 
+(() => {
+  'use strict';
 
-const _t = (s) => {
-    if (i18n !== void 0 && i18n[s]) {
-      return i18n[s];
-    }
-  
-    return s;
-  };
-  
-  const countries = [
-  "Baseline Fee", 1.0,
-"Afghanistan", 0.1,
-"Aland Islands", 1.0,
-"Albania", 0.2,
-"Algeria", 0.1,
-"American Samoa", 0.3,
-"Andorra", 1.0,
-"Angola", 0.1,
-"Antigua and Barbuda", 0.5,
-"Argentina", 0.3,
-"Armenia", 0.2,
-"Aruba", 0.7,
-"Australia", 1.0,
-"Austria", 1.0,
-"Azerbaijan", 0.1,
-"Bahamas", 0.7,
-"Bahrain", 0.6,
-"Bangladesh", 0.1,
-"Barbados", 0.5,
-"Belarus", 0.2,
-"Belgium", 1.0,
-"Belize", 0.1,
-"Benin", 0.1,
-"Bermuda", 1.0,
-"Bhutan", 0.1,
-"Bolivia", 0.1,
-"Bonaire", 1.0,
-"Bosnia and Herzegovina", 0.2,
-"Botswana", 0.1,
-"Brazil", 0.2,
-"British Virgin Islands", 0.8,
-"Brunei", 0.6,
-"Bulgaria", 0.4,
-"Burkina Faso", 0.1,
-"Burundi", 0.1,
-"Cabo Verde", 0.1,
-"Cambodia", 0.1,
-"Cameroon", 0.1,
-"Canada", 1.0,
-"Cayman Islands", 1.0,
-"Central African Republic", 0.1,
-"Chad", 0.1,
-"Channel Islands", 1.0,
-"Chile", 0.3,
-"China", 0.3,
-"Colombia", 0.2,
-"Comoros", 0.1,
-"Costa Rica", 0.4,
-"Croatia", 0.5,
-"Cuba", 0.1,
-"Curacao", 0.4,
-"Cyprus", 0.8,
-"Czechia", 0.7,
-"Democratic Republic of the Congo", 0.1,
-"Denmark", 1.0,
-"Djibouti", 0.1,
-"Dominica", 0.2,
-"Dominican Republic", 0.2,
-"Ecuador", 0.1,
-"Egypt", 0.1,
-"El Salvador", 0.1,
-"Equatorial Guinea", 0.1,
-"Eritrea", 0.1,
-"Estonia", 0.6,
-"Eswatini", 0.1,
-"Ethiopia", 0.1,
-"Faroe Islands", 1.0,
-"Fiji", 0.1,
-"Finland", 1.0,
-"France", 0.9,
-"French Guiana", 0.4,
-"French Polynesia", 0.4,
-"Gabon", 0.2,
-"Gambia", 0.1,
-"Georgia", 0.2,
-"Germany", 1.0,
-"Ghana", 0.1,
-"Gibraltar", 0.1,
-"Greece", 0.5,
-"Greenland", 1.0,
-"Grenada", 0.2,
-"Guadeloupe", 0.8,
-"Guam", 0.8,
-"Guatemala", 0.1,
-"Guinea", 0.1,
-"Guinea-Bissau", 0.1,
-"Guyana", 0.6,
-"Haiti", 0.1,
-"Honduras", 0.1,
-"Hong Kong", 1.0,
-"Hungary", 0.5,
-"Iceland", 1.0,
-"India", 0.1,
-"Indonesia", 0.1,
-"Iran", 0.0, // Effective, actually (0.1)
-"Iraq", 0.1,
-"Ireland", 1.0,
-"Isle of Man", 1.0,
-"Israel", 1.0,
-"Italy", 0.8,
-"Ivory Coast", 0.1,
-"Jamaica", 0.1,
-"Japan", 0.7,
-"Jersey", 1.0,
-"Jordan", 0.1,
-"Kazakhstan", 0.3,
-"Kenya", 0.1,
-"Kiribati", 0.1,
-"Kosovo", 0.1,
-"Kuwait", 0.6,
-"Kyrgyzstan", 0.1,
-"Laos", 0.1,
-"Latvia", 0.5,
-"Lebanon", 0.1,
-"Lesotho", 0.1,
-"Liberia", 0.1,
-"Libya", 0.1,
-"Liechtenstein", 1.0,
-"Lithuania", 0.6,
-"Luxembourg", 1.0,
-"Macao", 1.0,
-"Madagascar", 0.1,
-"Malawi", 0.1,
-"Malaysia", 0.2,
-"Maldives", 0.3,
-"Mali", 0.1,
-"Malta", 0.9,
-"Marshall Islands", 0.2,
-"Martinique", 0.8,
-"Mauritania", 0.1,
-"Mauritius", 0.2,
-"Mexico", 0.3,
-"Micronesia", 0.1,
-"Moldova", 0.2,
-"Monaco", 1.0,
-"Mongolia", 0.1,
-"Montenegro", 0.3,
-"Montserrat", 0.4,
-"Morocco", 0.1,
-"Mozambique", 0.1,
-"Myanmar", 0.1,
-"Namibia", 0.1,
-"Nauru", 0.3,
-"Nepal", 0.1,
-"Netherlands", 1.0,
-"New Caledonia", 0.5,
-"New Zealand", 0.9,
-"Nicaragua", 0.1,
-"Niger", 0.1,
-"Nigeria", 0.1,
-"Niue", 0.3,
-"North Korean", 0.1,
-"North Macedonia", 0.2,
-"Northern Mariana Islands", 0.4,
-"Norway", 1.0,
-"Oman", 0.4,
-"Pakistan", 0.1,
-"Palau", 0.4,
-"Palestinian Territory", 0.1,
-"Panama", 0.4,
-"Papua New Guinea", 0.1,
-"Paraguay", 0.1,
-"Peru", 0.2,
-"Philippines", 0.1,
-"Poland", 0.5,
-"Portugal", 0.6,
-"Puerto Rico", 0.8,
-"Qatar", 1.0,
-"Republic of the Congo", 0.1,
-"Reunion", 0.1,
-"Romania", 0.4,
-"Russia", 0.3,
-"Rwanda", 0.1,
-"Saint Kitts and Nevis", 0.5,
-"Saint Lucia", 0.3,
-"Saint Vincent and the Grenadines", 0.2,
-"Samoa", 0.1,
-"San Marino", 1.0,
-"Sao Tome and Principe", 0.1,
-"Saudi Arabia", 0.6,
-"Senegal", 0.1,
-"Serbia", 0.3,
-"Seychelles", 0.4,
-"Sierra Leone", 0.1,
-"Singapore", 1.0,
-"Sint Maarten (Dutch part)", 0.8,
-"Slovakia", 0.5,
-"Slovenia", 0.7,
-"Solomon Islands", 0.1,
-"Somalia", 0.1,
-"South Africa", 0.1,
-"South Korea", 0.7,
-"South Sudan", 0.1,
-"Spain", 0.7,
-"Sri Lanka", 0.1,
-"St. Martin (French part)", 0.1,
-"Sudan", 0.1,
-"Suriname", 0.1,
-"Svalbard and Jan Mayen", 1.0,
-"Sweden", 1.0,
-"Switzerland", 1.0,
-"Syria", 0.1,
-"Taiwan", 0.8,
-"Tajikistan", 0.1,
-"Tanzania", 0.1,
-"Thailand", 0.1,
-"Timor Leste", 0.1,
-"Togo", 0.1,
-"Tonga", 0.1,
-"Trinidad and Tobago", 0.4,
-"Tunisia", 0.1,
-"Turkey", 0.3,
-"Turkmenistan", 0.1,
-"Turks and Caicos Islands", 0.7,
-"Tuvalu", 0.1,
-"Uganda", 0.1,
-"Ukraine", 0.1,
-"United Arab Emirates", 0.9,
-"United Kingdom", 1.0,
-"United States", 1.0,
-"Uruguay", 0.5,
-"Uzbekistan", 0.1,
-"Vanuatu", 0.1,
-"Vatican", 0.4,
-"Venezuela", 0.1,
-"Vietnam", 0.1,
-"Virgin Islands (U.S.)", 0.8,
-"Western Sahara", 0.1,
-"Yemen", 0.1,
-"Zambia", 0.1,
-"Zimbabwe", 0.1
-];
-    
-  var select0 = document.querySelector(".js-Selector0"); //.innerHTML = "";
+  /* ------------------------------------------------------------------
+   * Fee configuration. The calculation in computeFee() reproduces the
+   * original widget exactly; change rates here, not the formula.
+   * ------------------------------------------------------------------ */
+  const COURSES = [
+    { id: 'deep-learning',        name: 'Deep Learning',              fee: 2510 },
+    { id: 'comp-neuro',           name: 'Computational Neuroscience', fee: 2510 },
+    { id: 'comp-behaviour',       name: 'Computational Behaviour',    fee: 1752 },
+    { id: 'neuroai',              name: 'NeuroAI',                    fee: 1752 }
+  ];
 
-  for(var i = 0; i < countries.length/2; i++) {
-    var opt = document.createElement('option');
-    opt.value = countries[2*i+1];
-    opt.text = countries[2*i];
-    select0.add(opt);
-    }
+  const JOBS = [
+    { id: 'academia', name: 'Academia',              industry: false },
+    { id: 'industry', name: 'Industry',              industry: true },
+    { id: 'other',    name: 'Other or self-employed', industry: false }
+  ];
 
-  var select1 = document.querySelector(".js-Selector1"); //.innerHTML = "";
-  var opt = document.createElement('option');
-  opt.value = 0.0;
-  opt.text = 'Academia';
-  select1.add(opt);
-  var opt = document.createElement('option');
-  opt.value = 1.0;
-  opt.text = 'Industry';
-  select1.add(opt);
-  var opt = document.createElement('option');
-  opt.value = 0.0;
-  opt.text = 'Other/self-employed';
-  select1.add(opt);
+  const NON_INDUSTRY_FACTOR = 1 - 1200 / 2090;  // same constant as the original widget
+  const SELF_FUNDED_FACTOR = 0.5;
+  const PROCESSING_FEE = 50;
 
-  var select2 = document.querySelector(".js-Selector2"); //.innerHTML = "";
-  var opt = document.createElement('option');
-  opt.value = 1.0;
-  opt.text = 'Yes';
-  select2.add(opt);
-  var opt = document.createElement('option');
-  opt.value = 0.0;
-  opt.text = 'No';
-  select2.add(opt);
-    
-    
-  var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
-  var opt = document.createElement('option');
-  opt.value = 2510;
-  opt.text = 'Deep Learning';
-  select3.add(opt);
-  var opt = document.createElement('option');
-  opt.value = 2510;
-  opt.text = 'Computational Neuroscience';
-  select3.add(opt);
-  var opt = document.createElement('option');
-  opt.value = 1752;
-  opt.text = 'Computational Behaviour';
-  select3.add(opt);
-  var opt = document.createElement('option');
-  opt.value = 1752;
-  opt.text = 'NeuroAI';
-  select3.add(opt);
+  // Rates come from rates.js, shared with the other widget.
+  const RATES = window.NMA_RATES;
+  const OVERRIDES = (RATES && RATES.overrides && RATES.overrides.courseFee) || {};
 
-  //document.querySelector(".js-Selector").value = "Europe/Brussels";
-  
-  function onChange() {
-    var country = document.getElementById('country').value
-    var job = document.getElementById('job').value
-    var fund = document.getElementById('fund').value
-    var course = document.getElementById('course').value
-    
-    // baseCost = Math.floor(country * course * (0.5 + 0.5*fund) + country * course * 0.574 / 0.426 * job * fund)
-    baseCost =  Math.floor(course * country * (job == 0.0 ? (1 - 1200/2090) : 1) * (fund == 0.0 ? 0.5 : 1))
-    processingCost = Math.floor(country * 50)
-    totalCost = Math.floor(baseCost + processingCost)
-    document.getElementById('costs').innerHTML = '$' + baseCost + ' USD';
-    document.getElementById('processing-costs').innerHTML = '$' + processingCost + ' USD';
-    document.getElementById('total-costs').innerHTML = '$' + totalCost + ' USD';
+  // Same arithmetic, in the same order, as the original widget, so the
+  // amounts match what the payment portal charges.
+  function computeFee(course, rate, job, funded) {
+    const base = Math.floor(
+      course.fee * rate * (job.industry ? 1 : NON_INDUSTRY_FACTOR) * (funded ? 1 : SELF_FUNDED_FACTOR)
+    );
+    const processing = Math.floor(rate * PROCESSING_FEE);
+    return { base, processing, total: Math.floor(base + processing) };
   }
-  
-  onChange();
 
+  /* ---------------- Embedding ----------------
+   * URL parameters: ?course=deep-learning&country=Brazil&job=academia&funded=no&theme=auto
+   * Set PARENT_ORIGIN to your portal's origin to restrict who receives messages.
+   */
+  const PARENT_ORIGIN = '*';
+  const IN_FRAME = document.documentElement.classList.contains('in-frame');
+  const params = new URLSearchParams(location.search);
+
+  function postToParent(message) {
+    if (!IN_FRAME) return;
+    try { window.parent.postMessage(message, PARENT_ORIGIN); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------------- Build controls ---------------- */
+
+  const $ = (id) => document.getElementById(id);
+  const courseSelect = $('course');
+  const countrySelect = $('country');
+  const jobGroup = $('job');
+  const fundedGroup = $('funded');
+  const result = $('result');
+
+  const money = (n) => `$${n.toLocaleString('en-US')}`;
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function buildRadios(container, name, options, checkedId) {
+    for (const opt of options) {
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = name;
+      input.id = `${name}-${opt.id}`;
+      input.value = opt.id;
+      input.checked = opt.id === checkedId;
+      const label = el('label', null, opt.name);
+      label.htmlFor = input.id;
+      container.append(input, label);
+    }
+  }
+
+  const findBy = (list, key, value) =>
+    list.find((item) => String(item[key]).toLowerCase() === String(value || '').toLowerCase());
+
+  // Course
+  courseSelect.append(...COURSES.map((c) => new Option(c.name, c.id)));
+  courseSelect.value = (findBy(COURSES, 'id', params.get('course')) || COURSES[0]).id;
+
+  // Country (sorted, with a prompt so nobody sees a fee for the wrong country)
+  if (!RATES || !RATES.countries) {
+    document.querySelector('.controls').hidden = true;
+    result.replaceChildren(el('p', 'empty', 'Fees can’t be shown right now. Please try again later, or email nma@neuromatch.io.'));
+    watchHeight();
+    return;
+  }
+
+  const countryList = Object.entries(RATES.countries)
+    .map(([name, rate]) => ({ name, rate: name in OVERRIDES ? OVERRIDES[name] : rate }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (RATES.updated) {
+    const updated = new Date(RATES.updated + 'T00:00:00Z');
+    $('rates-updated').textContent =
+      `Regional rates last updated ${updated.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}.`;
+  }
+  const prompt = new Option('Select your country', '');
+  prompt.disabled = true;
+  countrySelect.append(prompt, ...countryList.map((c) => new Option(c.name, c.name)));
+  const urlCountry = findBy(countryList, 'name', params.get('country'));
+  countrySelect.value = urlCountry ? urlCountry.name : '';
+
+  // Job type and funding
+  buildRadios(jobGroup, 'job', JOBS, (findBy(JOBS, 'id', params.get('job')) || JOBS[0]).id);
+  const fundedParam = (params.get('funded') || '').toLowerCase();
+  buildRadios(fundedGroup, 'funded', [{ id: 'yes', name: 'Yes' }, { id: 'no', name: 'No' }],
+    fundedParam === 'no' ? 'no' : 'yes');
+
+  /* ---------------- Render ---------------- */
+
+  function selectedValue(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? checked.value : null;
+  }
+
+  function feeRow(label, amount, extraClass) {
+    const row = el('div', `fee-row${extraClass ? ' ' + extraClass : ''}`);
+    const dd = el('dd', null, money(amount));
+    dd.append(el('span', 'currency', 'USD'));
+    row.append(el('dt', null, label), dd);
+    return row;
+  }
+
+  function render() {
+    const course = findBy(COURSES, 'id', courseSelect.value);
+    const country = findBy(countryList, 'name', countrySelect.value);
+    const job = findBy(JOBS, 'id', selectedValue('job'));
+    const funded = selectedValue('funded') === 'yes';
+
+    if (!country) {
+      result.replaceChildren(el('p', 'empty', `Choose your country of residence to see your fee for ${course.name}.`));
+      postToParent({ type: 'course-fee:change', course: course.id, country: null });
+      return;
+    }
+
+    const fee = computeFee(course, country.rate, job, funded);
+
+    const dl = el('dl', 'fees');
+    dl.append(
+      feeRow('Course fee', fee.base),
+      feeRow('Processing fee (non-refundable)', fee.processing),
+      feeRow('Total', fee.total, 'total')
+    );
+
+    const parts = [];
+    parts.push(country.rate === 1
+      ? `no regional adjustment for ${country.name}`
+      : `the regional rate for ${country.name} (${Math.round(country.rate * 100)}% of the standard fee)`);
+    if (!job.industry) parts.push('the reduced rate for academia, other and self-employed participants');
+    if (!funded) parts.push('a 50% reduction because your fee won’t be reimbursed');
+    const list = parts.length > 1
+      ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+      : parts[0];
+
+    const explain = el('p', 'explain',
+      `The standard ${course.name} fee is ${money(course.fee)} USD. Your course fee includes ${list}.`);
+
+    const nodes = [dl, explain];
+    if (!funded) {
+      const note = el('p', 'note', 'Before choosing “No”, try our ');
+      const toolkit = el('a', null, 'Tuition Toolkit');
+      toolkit.href = 'https://docs.neuromatch.io/p/EWjaSzD1pjoHRX/Neuromatch-Tuition-Toolkit';
+      toolkit.target = '_blank';
+      toolkit.rel = 'noopener';
+      note.append(toolkit,
+        ' to ask your supervisor or employer about covering the fee. ' +
+        'If you still can’t afford the reduced fee, you can apply for a hardship discount in the payment portal.');
+      nodes.push(note);
+    }
+    result.replaceChildren(...nodes);
+
+    postToParent({
+      type: 'course-fee:change',
+      course: course.id,
+      country: country.name,
+      job: job.id,
+      funded,
+      courseFee: fee.base,
+      processingFee: fee.processing,
+      total: fee.total,
+      currency: 'USD'
+    });
+  }
+
+  function watchHeight() {
+    if (!IN_FRAME) return;
+    let last = 0;
+    const report = () => {
+      const height = Math.ceil(document.body.getBoundingClientRect().height);
+      if (height !== last) {
+        last = height;
+        postToParent({ type: 'course-fee:resize', height });
+      }
+    };
+    if (typeof ResizeObserver === 'function') new ResizeObserver(report).observe(document.body);
+    window.addEventListener('load', report);
+    report();
+  }
+
+  courseSelect.addEventListener('change', render);
+  countrySelect.addEventListener('change', render);
+  document.querySelectorAll('input[name="job"], input[name="funded"]').forEach((input) => {
+    input.addEventListener('change', render);
+  });
+
+  render();
+  watchHeight();
+})();
 </script>
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
-</div>
-</div>
-</div>
-</body></html>
+</body>
+</html>
