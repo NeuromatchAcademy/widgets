@@ -3,10 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Time slot selector</title>
+<title>Course fee calculator</title>
 <script>
-  // Set theme and iframe mode before first paint.
-  // ?theme=light (default) | dark | auto (follows the viewer's OS setting)
+  // ?theme=light (default) | dark | auto
   (function () {
     var root = document.documentElement;
     var theme = 'light';
@@ -33,56 +32,23 @@
     --header-text: #1c272c;
     --text: #1f2529;
     --muted: #5a666c;
-    --course: #2b3a42;
-    --project: #c43d3d;          /* darker than #FF7676 so text passes contrast */
-    --project-fill: #ff7676;     /* original brand coral, used for the bar */
-    --night: #e7ebed;
     --accent: #2e6a86;
     --on-accent: #ffffff;
-    --recommended-bg: #eef5f9;
+    --total-bg: #eef5f9;
     --input-bg: #ffffff;
-    --slot-inset: 17px;          /* slot border + horizontal padding; the scale uses it too */
     color-scheme: light;
   }
   :root[data-theme="dark"] {
-    --page: #161b1e;
-    --surface: #1c2226;
-    --panel: #232a2f;
-    --border: #333d43;
-    --border-strong: #4a565d;
-    --header-bg: #3d4b52;
-    --header-text: #eef3f5;
-    --text: #e6ebee;
-    --muted: #a3afb5;
-    --course: #d8e2e7;
-    --project: #ff8a8a;
-    --project-fill: #ff7676;
-    --night: #2b3338;
-    --accent: #7fb6d1;
-    --on-accent: #10222b;
-    --recommended-bg: #1f2d35;
-    --input-bg: #1a2024;
+    --page: #161b1e; --surface: #1c2226; --panel: #232a2f; --border: #333d43; --border-strong: #4a565d;
+    --header-bg: #3d4b52; --header-text: #eef3f5; --text: #e6ebee; --muted: #a3afb5;
+    --accent: #7fb6d1; --on-accent: #10222b; --total-bg: #1f2d35; --input-bg: #1a2024;
     color-scheme: dark;
   }
   @media (prefers-color-scheme: dark) {
     :root[data-theme="auto"] {
-      --page: #161b1e;
-      --surface: #1c2226;
-      --panel: #232a2f;
-      --border: #333d43;
-      --border-strong: #4a565d;
-      --header-bg: #3d4b52;
-      --header-text: #eef3f5;
-      --text: #e6ebee;
-      --muted: #a3afb5;
-      --course: #d8e2e7;
-      --project: #ff8a8a;
-      --project-fill: #ff7676;
-      --night: #2b3338;
-      --accent: #7fb6d1;
-      --on-accent: #10222b;
-      --recommended-bg: #1f2d35;
-      --input-bg: #1a2024;
+      --page: #161b1e; --surface: #1c2226; --panel: #232a2f; --border: #333d43; --border-strong: #4a565d;
+      --header-bg: #3d4b52; --header-text: #eef3f5; --text: #e6ebee; --muted: #a3afb5;
+      --accent: #7fb6d1; --on-accent: #10222b; --total-bg: #1f2d35; --input-bg: #1a2024;
       color-scheme: dark;
     }
   }
@@ -94,13 +60,14 @@
     color: var(--text);
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
-
-  /* Inside the portal's iframe: no outer padding so the frame can hug the widget */
   html.in-frame body { padding: 0; background: transparent; }
   html.in-frame .widget { max-width: none; }
 
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   .widget {
-    max-width: 700px;
+    max-width: 760px;
     margin: 0 auto;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -111,19 +78,20 @@
   .widget-header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--header-text); }
   .widget-body { padding: 20px; }
 
-  .intro { margin: 0 0 20px; max-width: 62ch; }
-  .course-word { color: var(--course); font-weight: 600; }
-  .project-word { color: var(--project); font-weight: 600; }
+  .intro { margin: 0 0 20px; max-width: 64ch; }
 
   /* Controls */
   .controls {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 120px auto;
-    gap: 14px 16px;
-    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
     padding: 16px;
     background: var(--panel);
     border-radius: 8px;
+  }
+  .field-wide { grid-column: 1 / -1; }
+  @media (max-width: 560px) {
+    .controls { grid-template-columns: 1fr; }
   }
   .field-label {
     display: block;
@@ -143,272 +111,187 @@
     border-radius: 6px;
   }
   select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-  .hint { margin: 6px 0 0; font-size: .85rem; color: var(--muted); }
-  .hint button {
-    font: inherit; color: var(--accent); background: none; border: 0; padding: 0;
-    text-decoration: underline; cursor: pointer;
-  }
-  .hint button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-  .segmented { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   .segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
   .segmented label {
-    padding: 8px 14px; cursor: pointer; background: var(--input-bg); color: var(--text);
-    font-variant-numeric: tabular-nums;
+    padding: 7px 14px;
+    cursor: pointer;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
   }
-  .segmented label + input + label { border-left: 1px solid var(--border-strong); }
-  .segmented input:checked + label { background: var(--accent); color: var(--on-accent); font-weight: 600; }
-  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: -4px; }
+  .segmented input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  @media (max-width: 560px) {
-    .controls { grid-template-columns: 1fr auto; }
-    .field-tz { grid-column: 1 / -1; }
-  }
-
-  /* Results */
-  .basis { margin: 18px 0 10px; font-size: .9rem; color: var(--muted); }
-
-  .scale {
-    position: relative;
-    height: 1.4em;
-    margin: 0 var(--slot-inset) 4px;
-    font-size: .75rem;
+  /* Result */
+  .result { margin-top: 20px; }
+  .empty {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px;
     color: var(--muted);
-    font-variant-numeric: tabular-nums;
   }
-  .scale span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
-  .scale span:first-child { transform: none; }
-  .scale span:last-child { transform: translateX(-100%); }
-
-  .slots { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-  .slot {
+  .fees {
+    margin: 0;
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 14px calc(var(--slot-inset) - 1px);
-  }
-  .slot.is-recommended {
-    border: 2px solid var(--accent);
-    padding: 13px calc(var(--slot-inset) - 2px);
-    background: var(--recommended-bg);
-  }
-  .slot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-bottom: 10px; }
-  .slot-name { font-weight: 700; }
-  .slot-region { color: var(--muted); font-size: .9rem; }
-  .badge {
-    margin-left: auto;
-    font-size: .8rem;
-    font-weight: 600;
-    padding: 1px 10px;
-    border-radius: 999px;
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-
-  /* 24-hour strip of the viewer's local day */
-  .day {
-    position: relative;
-    height: 14px;
-    border-radius: 3px;
-    background:
-      linear-gradient(to right,
-        var(--night) 0 29.1667%, transparent 29.1667% 91.6667%, var(--night) 91.6667% 100%),
-      var(--panel);
-    margin-bottom: 10px;
     overflow: hidden;
   }
-  .day::after { /* quarter-day guides */
-    content: ""; position: absolute; inset: 0;
-    background: repeating-linear-gradient(to right, transparent 0 calc(25% - 1px), var(--border) calc(25% - 1px) 25%);
-    pointer-events: none;
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
   }
-  .seg { position: absolute; top: 0; bottom: 0; border-radius: 2px; z-index: 1; }
-  .seg.course { background: var(--course); }
-  .seg.project { background: var(--project-fill); }
+  .fee-row:first-child { border-top: 0; }
+  .fee-row dt { margin: 0; }
+  .fee-row dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fee-row.total { background: var(--total-bg); }
+  .fee-row.total dt { font-weight: 700; }
+  .fee-row.total dd { font-size: 1.25rem; font-weight: 700; }
+  .currency { font-size: .85em; font-weight: 500; color: var(--muted); margin-left: 4px; }
 
-  .times { margin: 0; display: grid; gap: 2px; }
-  .row { display: grid; grid-template-columns: 7.5rem 1fr; gap: 8px; align-items: baseline; }
-  .row dt { font-size: .9rem; font-weight: 600; }
-  .row dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .row.course dt, .row.course dd { color: var(--course); }
-  .row.project dt, .row.project dd { color: var(--project); }
-  .next-day { margin-left: 6px; font-size: .8rem; font-weight: 500; color: var(--muted); }
-
-  @media (max-width: 420px) {
-    .row { grid-template-columns: 1fr; gap: 0; margin-bottom: 4px; }
+  .explain { margin: 12px 0 0; font-size: .92rem; color: var(--muted); max-width: 64ch; }
+  .note {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: var(--panel);
+    font-size: .92rem;
+    max-width: 64ch;
   }
 
-  .footnote { margin: 16px 0 0; font-size: .9rem; color: var(--muted); }
+  /* About */
+  .about { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .about h2 { margin: 0 0 8px; font-size: 1rem; }
+  .about p { margin: 0 0 12px; max-width: 64ch; font-size: .95rem; }
+  .contact { margin: 20px 0 0; font-size: .92rem; color: var(--muted); }
 </style>
 </head>
 <body>
 
 <div class="widget">
   <header class="widget-header">
-    <h1>Time slot selector</h1>
+    <h1>Course fee calculator</h1>
   </header>
 
   <div class="widget-body">
     <p class="intro">
-      Students and TAs work on <span class="course-word">synchronous coursework</span> and
-      <span class="project-word">projects</span> during the times below. Mentors help during project time only.
-      Choose your time zone to see every slot in your local time.
+      Our fees are adjusted by country so people everywhere can take part.
+      Choose your course and tell us a little about your situation to see what you’ll pay.
     </p>
 
     <div class="controls">
-      <div class="field-tz">
-        <label class="field-label" for="tz">Your time zone</label>
-        <select id="tz"></select>
-        <p class="hint" id="tz-hint"></p>
+      <div>
+        <label class="field-label" for="course">Course</label>
+        <select id="course"></select>
       </div>
       <div>
-        <label class="field-label" for="year">Course year</label>
-        <select id="year"></select>
+        <label class="field-label" for="country">Country of residence</label>
+        <select id="country"></select>
       </div>
-      <fieldset>
-        <legend class="field-label">Clock</legend>
-        <div class="segmented">
-          <input type="radio" name="clock" id="clock-12" value="12">
-          <label for="clock-12">12h</label>
-          <input type="radio" name="clock" id="clock-24" value="24">
-          <label for="clock-24">24h</label>
-        </div>
+      <fieldset class="field-wide">
+        <legend class="field-label">Job type</legend>
+        <div class="segmented" id="job"></div>
+      </fieldset>
+      <fieldset class="field-wide">
+        <legend class="field-label">Will your employer or supervisor pay or reimburse your tuition?</legend>
+        <div class="segmented" id="funded"></div>
       </fieldset>
     </div>
 
-    <p class="basis" id="basis" aria-live="polite"></p>
+    <div class="result" id="result" aria-live="polite"></div>
 
-    <div class="scale" id="scale" aria-hidden="true"></div>
-    <ol class="slots" id="slots"></ol>
-
-    <p class="footnote">
-      The recommended slot is the one people in your time zone usually choose,
-      but you can pick whichever slot fits your schedule best.
-    </p>
+    <section class="about">
+      <h2>About our fees</h2>
+      <p>
+        At <a href="https://neuromatch.io/" target="_blank" rel="noopener">Neuromatch</a>, our mission is to democratize
+        education and research in the computational sciences globally. Course fees go directly to sustaining the Academy
+        and supporting the Teaching Assistants (TAs) who dedicate an entire month to teaching you. Without them,
+        Neuromatch could not operate.
+        <a href="https://neuromatch.io/courses/" target="_blank" rel="noopener">Read more about Neuromatch Academy</a>.
+      </p>
+      <p>
+        To keep courses accessible, we adjust fees by region using GDP per capita data from the
+        <a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.CD" target="_blank" rel="noopener">World Bank</a>,
+        so participants from many socioeconomic and geographical backgrounds can join.
+      </p>
+      <p>
+        Most professors and universities pay these fees directly from grants or education funds. Use our
+        <a href="https://docs.neuromatch.io/p/EWjaSzD1pjoHRX/Neuromatch-Tuition-Toolkit" target="_blank" rel="noopener">Tuition Toolkit</a>
+        to start the conversation with your supervisor about covering the cost of the course.
+      </p>
+      <p>
+        If you can’t get reimbursed after exploring all available options, we reduce your course fee by 50%.
+        In exceptional circumstances, if you can’t afford the reduced fee, you can apply for an additional hardship
+        discount through the payment portal.
+      </p>
+      <p>
+        A non-refundable processing fee, also adjusted by region, covers administrative costs. See our
+        <a href="https://docs.neuromatch.io/p/GJuBoDwfThwsFN/Course-Refund-Policy" target="_blank" rel="noopener">Course Refund Policy</a>.
+      </p>
+      <p class="contact" id="rates-updated"></p>
+      <p class="contact">
+        Questions? Email <a href="mailto:nma@neuromatch.io">nma@neuromatch.io</a>.
+      </p>
+    </section>
   </div>
 </div>
 
+<script src="rates.js?v=2026-11-05"></script>
 <script>
 (() => {
   'use strict';
 
   /* ------------------------------------------------------------------
-   * Schedule configuration. All times are UTC on the reference date.
-   * An end time earlier than its start time means "the next day".
+   * Fee configuration. The calculation in computeFee() reproduces the
+   * original widget exactly; change rates here, not the formula.
    * ------------------------------------------------------------------ */
-  const CONFIG = {
-    referenceMonth: 7,          // July
-    referenceDay: 1,
-    idealLocalStartHour: 8.6,   // recommend the slot whose coursework starts nearest 8:36 local
-    slots: [
-      { id: 1, region: 'Eastern Asia / Australia', coursework: ['00:30', '05:00'], projects: ['06:00', '09:00'] },
-      { id: 2, region: 'Middle East / India',      coursework: ['04:30', '09:00'], projects: ['10:00', '13:00'] },
-      { id: 3, region: 'Europe / Africa',          coursework: ['08:00', '12:30'], projects: ['13:30', '16:30'] },
-      { id: 4, region: 'Eastern Americas',         coursework: ['13:00', '17:30'], projects: ['18:30', '21:30'] },
-      { id: 5, region: 'Western Americas',         coursework: ['17:00', '21:30'], projects: ['22:30', '01:30'] }
-    ]
-  };
-
-  // Friendly names for common zones. Offsets are computed live, so they
-  // stay correct when a country changes its daylight saving rules.
-  const ZONES = [
-    ['Etc/GMT+12', 'International Date Line West'],
-    ['Pacific/Pago_Pago', 'American Samoa, Midway Island'],
-    ['Pacific/Honolulu', 'Hawaii'],
-    ['America/Anchorage', 'Alaska'],
-    ['America/Los_Angeles', 'Pacific Time (US and Canada), Tijuana'],
-    ['America/Phoenix', 'Arizona'],
-    ['America/Denver', 'Mountain Time (US and Canada)'],
-    ['America/Mazatlan', 'Mazatlán, La Paz (Baja California Sur)'],
-    ['America/Chicago', 'Central Time (US and Canada)'],
-    ['America/Regina', 'Saskatchewan'],
-    ['America/Mexico_City', 'Guadalajara, Mexico City, Monterrey'],
-    ['America/Chihuahua', 'Chihuahua'],
-    ['America/Guatemala', 'Central America'],
-    ['America/New_York', 'Eastern Time (US and Canada)'],
-    ['America/Indiana/Indianapolis', 'Indiana (East)'],
-    ['America/Bogota', 'Bogotá, Lima, Quito'],
-    ['America/Halifax', 'Atlantic Time (Canada)'],
-    ['America/Caracas', 'Caracas'],
-    ['America/La_Paz', 'La Paz (Bolivia), Georgetown'],
-    ['America/Santiago', 'Santiago'],
-    ['America/St_Johns', 'Newfoundland and Labrador'],
-    ['America/Sao_Paulo', 'Brasília, São Paulo'],
-    ['America/Argentina/Buenos_Aires', 'Buenos Aires'],
-    ['America/Nuuk', 'Greenland (Nuuk)'],
-    ['Etc/GMT+2', 'Mid-Atlantic'],
-    ['Atlantic/Azores', 'Azores'],
-    ['Atlantic/Cape_Verde', 'Cape Verde'],
-    ['UTC', 'Coordinated Universal Time'],
-    ['Atlantic/Reykjavik', 'Reykjavík, Accra, Monrovia'],
-    ['Europe/London', 'London, Dublin, Edinburgh, Lisbon'],
-    ['Atlantic/Canary', 'Canary Islands'],
-    ['Africa/Casablanca', 'Casablanca'],
-    ['Africa/Lagos', 'West Central Africa (Lagos, Algiers)'],
-    ['Europe/Paris', 'Brussels, Copenhagen, Madrid, Paris'],
-    ['Europe/Berlin', 'Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna'],
-    ['Europe/Prague', 'Belgrade, Bratislava, Budapest, Ljubljana, Prague'],
-    ['Europe/Warsaw', 'Sarajevo, Skopje, Warsaw, Zagreb'],
-    ['Africa/Johannesburg', 'Harare, Johannesburg, Pretoria'],
-    ['Africa/Cairo', 'Cairo'],
-    ['Europe/Bucharest', 'Bucharest'],
-    ['Europe/Helsinki', 'Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius'],
-    ['Europe/Athens', 'Athens'],
-    ['Asia/Jerusalem', 'Jerusalem'],
-    ['Europe/Istanbul', 'Istanbul'],
-    ['Europe/Minsk', 'Minsk'],
-    ['Europe/Moscow', 'Moscow, St. Petersburg, Volgograd'],
-    ['Asia/Riyadh', 'Kuwait, Riyadh'],
-    ['Africa/Nairobi', 'Nairobi'],
-    ['Asia/Baghdad', 'Baghdad'],
-    ['Asia/Tehran', 'Tehran'],
-    ['Asia/Dubai', 'Abu Dhabi, Dubai, Muscat'],
-    ['Asia/Baku', 'Baku, Tbilisi, Yerevan'],
-    ['Asia/Kabul', 'Kabul'],
-    ['Asia/Yekaterinburg', 'Yekaterinburg'],
-    ['Asia/Karachi', 'Islamabad, Karachi'],
-    ['Asia/Tashkent', 'Tashkent'],
-    ['Asia/Almaty', 'Astana, Almaty'],
-    ['Asia/Kolkata', 'Chennai, Kolkata, Mumbai, New Delhi'],
-    ['Asia/Colombo', 'Colombo'],
-    ['Asia/Kathmandu', 'Kathmandu'],
-    ['Asia/Dhaka', 'Dhaka'],
-    ['Asia/Yangon', 'Yangon'],
-    ['Asia/Bangkok', 'Bangkok, Hanoi, Jakarta'],
-    ['Asia/Novosibirsk', 'Novosibirsk'],
-    ['Asia/Krasnoyarsk', 'Krasnoyarsk'],
-    ['Asia/Shanghai', 'Beijing, Chongqing, Hong Kong, Urumqi'],
-    ['Asia/Singapore', 'Kuala Lumpur, Singapore'],
-    ['Asia/Manila', 'Manila'],
-    ['Asia/Taipei', 'Taipei'],
-    ['Australia/Perth', 'Perth'],
-    ['Asia/Irkutsk', 'Irkutsk'],
-    ['Asia/Ulaanbaatar', 'Ulaanbaatar'],
-    ['Asia/Seoul', 'Seoul'],
-    ['Asia/Tokyo', 'Osaka, Sapporo, Tokyo'],
-    ['Asia/Yakutsk', 'Yakutsk'],
-    ['Australia/Darwin', 'Darwin'],
-    ['Australia/Adelaide', 'Adelaide'],
-    ['Australia/Brisbane', 'Brisbane'],
-    ['Australia/Sydney', 'Canberra, Melbourne, Sydney'],
-    ['Australia/Hobart', 'Hobart'],
-    ['Pacific/Port_Moresby', 'Guam, Port Moresby'],
-    ['Asia/Vladivostok', 'Vladivostok'],
-    ['Asia/Magadan', 'Magadan'],
-    ['Pacific/Guadalcanal', 'Solomon Islands, New Caledonia'],
-    ['Pacific/Fiji', 'Fiji'],
-    ['Asia/Kamchatka', 'Kamchatka'],
-    ['Pacific/Auckland', 'Auckland, Wellington'],
-    ['Pacific/Tongatapu', 'Nuku’alofa'],
-    ['Pacific/Apia', 'Samoa'],
-    ['Pacific/Kiritimati', 'Kiritimati']
+  const COURSES = [
+    { id: 'deep-learning',        name: 'Deep Learning',              fee: 2510 },
+    { id: 'comp-neuro',           name: 'Computational Neuroscience', fee: 2510 },
+    { id: 'comp-behaviour',       name: 'Computational Behaviour',    fee: 1752 },
+    { id: 'neuroai',              name: 'NeuroAI',                    fee: 1752 }
   ];
 
-  /* ------------------------------------------------------------------
-   * Embedding. Set PARENT_ORIGIN to your portal's origin, for example
-   * 'https://apply.example.org', so messages only go to that page.
-   * URL parameters the portal can pass: ?tz=Europe/Paris&year=2027&clock=24&theme=auto
-   * ------------------------------------------------------------------ */
+  const JOBS = [
+    { id: 'academia', name: 'Academia',              industry: false },
+    { id: 'industry', name: 'Industry',              industry: true },
+    { id: 'other',    name: 'Other or self-employed', industry: false }
+  ];
+
+  const NON_INDUSTRY_FACTOR = 1 - 1200 / 2090;  // same constant as the original widget
+  const SELF_FUNDED_FACTOR = 0.5;
+  const PROCESSING_FEE = 50;
+
+  // Rates come from rates.js, shared with the other widget.
+  const RATES = window.NMA_RATES;
+  const OVERRIDES = (RATES && RATES.overrides && RATES.overrides.courseFee) || {};
+
+  // Same arithmetic, in the same order, as the original widget, so the
+  // amounts match what the payment portal charges.
+  function computeFee(course, rate, job, funded) {
+    const base = Math.floor(
+      course.fee * rate * (job.industry ? 1 : NON_INDUSTRY_FACTOR) * (funded ? 1 : SELF_FUNDED_FACTOR)
+    );
+    const processing = Math.floor(rate * PROCESSING_FEE);
+    return { base, processing, total: Math.floor(base + processing) };
+  }
+
+  /* ---------------- Embedding ----------------
+   * URL parameters: ?course=deep-learning&country=Brazil&job=academia&funded=no&theme=auto
+   * Set PARENT_ORIGIN to your portal's origin to restrict who receives messages.
+   */
   const PARENT_ORIGIN = '*';
   const IN_FRAME = document.documentElement.classList.contains('in-frame');
   const params = new URLSearchParams(location.search);
@@ -418,187 +301,16 @@
     try { window.parent.postMessage(message, PARENT_ORIGIN); } catch (e) { /* ignore */ }
   }
 
-  const STORAGE_PREFIX = 'slotSelector:';
-  const store = {
-    get(key) { try { return localStorage.getItem(STORAGE_PREFIX + key); } catch (e) { return null; } },
-    set(key, value) { try { localStorage.setItem(STORAGE_PREFIX + key, value); } catch (e) { /* ignore */ } }
-  };
+  /* ---------------- Build controls ---------------- */
 
   const $ = (id) => document.getElementById(id);
-  const tzSelect = $('tz');
-  const yearSelect = $('year');
-  const tzHint = $('tz-hint');
-  const basis = $('basis');
-  const slotList = $('slots');
-  const scale = $('scale');
+  const courseSelect = $('course');
+  const countrySelect = $('country');
+  const jobGroup = $('job');
+  const fundedGroup = $('funded');
+  const result = $('result');
 
-  /* ---------------- Time zone helpers (built on Intl, no libraries) ---------------- */
-
-  const formatterCache = new Map();
-  function formatterFor(tz) {
-    if (!formatterCache.has(tz)) {
-      formatterCache.set(tz, new Intl.DateTimeFormat('en-US', {
-        timeZone: tz, hourCycle: 'h23',
-        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-      }));
-    }
-    return formatterCache.get(tz);
-  }
-
-  function isValidZone(tz) {
-    try { formatterFor(tz); return true; } catch (e) { return false; }
-  }
-
-  // Wall-clock reading of an instant in a given zone.
-  function wallClock(date, tz) {
-    const p = {};
-    for (const part of formatterFor(tz).formatToParts(date)) p[part.type] = part.value;
-    return {
-      year: Number(p.year), month: Number(p.month), day: Number(p.day),
-      hour: Number(p.hour) % 24, minute: Number(p.minute)
-    };
-  }
-
-  const dayNumber = (w) => Date.UTC(w.year, w.month - 1, w.day) / 86400000;
-
-  function offsetMinutes(tz, date) {
-    const w = wallClock(date, tz);
-    return Math.round((Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute) - date.getTime()) / 60000);
-  }
-
-  function formatOffset(minutes) {
-    if (minutes === 0) return 'GMT';
-    const sign = minutes < 0 ? '−' : '+';
-    const abs = Math.abs(minutes);
-    return `GMT${sign}${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
-  }
-
-  function referenceDate(year) {
-    return new Date(Date.UTC(year, CONFIG.referenceMonth - 1, CONFIG.referenceDay, 12, 0));
-  }
-
-  function utcInstant(year, hhmm, extraDays = 0) {
-    const [h, m] = hhmm.split(':').map(Number);
-    return new Date(Date.UTC(year, CONFIG.referenceMonth - 1, CONFIG.referenceDay + extraDays, h, m));
-  }
-
-  function localRange(year, [startUtc, endUtc], tz) {
-    const start = utcInstant(year, startUtc);
-    let end = utcInstant(year, endUtc);
-    if (end <= start) end = utcInstant(year, endUtc, 1);
-    const ws = wallClock(start, tz);
-    const we = wallClock(end, tz);
-    return {
-      start: ws,
-      end: we,
-      hours: (end - start) / 3600000,
-      crossesMidnight: dayNumber(we) > dayNumber(ws)
-    };
-  }
-
-  function formatTime(w, clock) {
-    const mm = String(w.minute).padStart(2, '0');
-    let text = clock === '24'
-      ? `${String(w.hour).padStart(2, '0')}:${mm}`
-      : `${w.hour % 12 === 0 ? 12 : w.hour % 12}:${mm} ${w.hour < 12 ? 'AM' : 'PM'}`;
-    if (w.minute === 0 && w.hour === 0) text += ' (midnight)';
-    if (w.minute === 0 && w.hour === 12) text += ' (noon)';
-    return text;
-  }
-
-  function circularDistance(a, b) {
-    const d = Math.abs(a - b) % 24;
-    return Math.min(d, 24 - d);
-  }
-
-  /* ---------------- Controls ---------------- */
-
-  const detectedZone = (() => {
-    try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return ''; }
-  })();
-
-  const defaultClock = (() => {
-    try {
-      const hc = new Intl.DateTimeFormat(undefined, { hour: 'numeric' }).resolvedOptions().hourCycle;
-      return hc === 'h11' || hc === 'h12' ? '12' : '24';
-    } catch (e) { return '12'; }
-  })();
-
-  function buildYearOptions() {
-    const current = new Date().getFullYear();
-    const years = [current - 1, current, current + 1];
-    const fromUrl = Number(params.get('year'));
-    const saved = Number(store.get('year'));
-    const chosen = [fromUrl, saved].find((y) => years.includes(y)) || current;
-    yearSelect.replaceChildren(...years.map((y) => new Option(String(y), String(y))));
-    yearSelect.value = String(chosen);
-  }
-
-  function buildZoneOptions(year, preferred) {
-    const ref = referenceDate(year);
-
-    const curated = ZONES
-      .filter(([tz]) => isValidZone(tz))
-      .map(([tz, label]) => ({ tz, label, offset: offsetMinutes(tz, ref) }))
-      .sort((a, b) => a.offset - b.offset || a.label.localeCompare(b.label));
-    const curatedIds = new Set(curated.map((z) => z.tz));
-
-    let others = [];
-    if (typeof Intl.supportedValuesOf === 'function') {
-      others = Intl.supportedValuesOf('timeZone')
-        .filter((tz) => !curatedIds.has(tz) && isValidZone(tz));
-    }
-    if (detectedZone && !curatedIds.has(detectedZone) && !others.includes(detectedZone) && isValidZone(detectedZone)) {
-      others.push(detectedZone);
-    }
-    others.sort((a, b) => a.localeCompare(b));
-
-    const common = document.createElement('optgroup');
-    common.label = 'Common time zones';
-    for (const z of curated) {
-      common.append(new Option(`(${formatOffset(z.offset)}) ${z.label}`, z.tz));
-    }
-
-    const groups = [common];
-    if (others.length) {
-      const all = document.createElement('optgroup');
-      all.label = 'All time zones by name';
-      for (const tz of others) {
-        all.append(new Option(`${tz.replace(/_/g, ' ')} (${formatOffset(offsetMinutes(tz, ref))})`, tz));
-      }
-      groups.push(all);
-    }
-    tzSelect.replaceChildren(...groups);
-
-    const candidates = [preferred, detectedZone, 'UTC'];
-    const valid = new Set([...curatedIds, ...others]);
-    tzSelect.value = candidates.find((tz) => tz && valid.has(tz)) || curated[0].tz;
-  }
-
-  function currentClock() {
-    const checked = document.querySelector('input[name="clock"]:checked');
-    return checked ? checked.value : defaultClock;
-  }
-
-  function updateHint() {
-    tzHint.replaceChildren();
-    if (!detectedZone) return;
-    if (tzSelect.value === detectedZone) {
-      tzHint.textContent = 'Detected from your device.';
-    } else {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.textContent = `Use my device’s time zone (${detectedZone.replace(/_/g, ' ')})`;
-      btn.addEventListener('click', () => {
-        tzSelect.value = detectedZone;
-        store.set('tz', detectedZone);
-        render();
-      });
-      tzHint.append(btn);
-    }
-  }
-
-  /* ---------------- Rendering ---------------- */
+  const money = (n) => `$${n.toLocaleString('en-US')}`;
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -607,97 +319,132 @@
     return node;
   }
 
-  function addSegments(bar, range, kind) {
-    const startHour = range.start.hour + range.start.minute / 60;
-    const pieces = startHour + range.hours > 24
-      ? [[startHour, 24], [0, startHour + range.hours - 24]]
-      : [[startHour, startHour + range.hours]];
-    for (const [from, to] of pieces) {
-      const seg = el('span', `seg ${kind}`);
-      seg.style.left = `${(from / 24) * 100}%`;
-      seg.style.width = `${((to - from) / 24) * 100}%`;
-      bar.append(seg);
+  function buildRadios(container, name, options, checkedId) {
+    for (const opt of options) {
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = name;
+      input.id = `${name}-${opt.id}`;
+      input.value = opt.id;
+      input.checked = opt.id === checkedId;
+      const label = el('label', null, opt.name);
+      label.htmlFor = input.id;
+      container.append(input, label);
     }
   }
 
-  function timeRow(kind, label, range, clock) {
-    const row = el('div', `row ${kind}`);
-    const dd = el('dd', null, `${formatTime(range.start, clock)} – ${formatTime(range.end, clock)}`);
-    if (range.crossesMidnight) dd.append(el('span', 'next-day', 'ends next day'));
+  const findBy = (list, key, value) =>
+    list.find((item) => String(item[key]).toLowerCase() === String(value || '').toLowerCase());
+
+  // Course
+  courseSelect.append(...COURSES.map((c) => new Option(c.name, c.id)));
+  courseSelect.value = (findBy(COURSES, 'id', params.get('course')) || COURSES[0]).id;
+
+  // Country (sorted, with a prompt so nobody sees a fee for the wrong country)
+  if (!RATES || !RATES.countries) {
+    document.querySelector('.controls').hidden = true;
+    result.replaceChildren(el('p', 'empty', 'Fees can’t be shown right now. Please try again later, or email nma@neuromatch.io.'));
+    watchHeight();
+    return;
+  }
+
+  const countryList = Object.entries(RATES.countries)
+    .map(([name, rate]) => ({ name, rate: name in OVERRIDES ? OVERRIDES[name] : rate }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (RATES.updated) {
+    const updated = new Date(RATES.updated + 'T00:00:00Z');
+    $('rates-updated').textContent =
+      `Regional rates last updated ${updated.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}.`;
+  }
+  const prompt = new Option('Select your country', '');
+  prompt.disabled = true;
+  countrySelect.append(prompt, ...countryList.map((c) => new Option(c.name, c.name)));
+  const urlCountry = findBy(countryList, 'name', params.get('country'));
+  countrySelect.value = urlCountry ? urlCountry.name : '';
+
+  // Job type and funding
+  buildRadios(jobGroup, 'job', JOBS, (findBy(JOBS, 'id', params.get('job')) || JOBS[0]).id);
+  const fundedParam = (params.get('funded') || '').toLowerCase();
+  buildRadios(fundedGroup, 'funded', [{ id: 'yes', name: 'Yes' }, { id: 'no', name: 'No' }],
+    fundedParam === 'no' ? 'no' : 'yes');
+
+  /* ---------------- Render ---------------- */
+
+  function selectedValue(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? checked.value : null;
+  }
+
+  function feeRow(label, amount, extraClass) {
+    const row = el('div', `fee-row${extraClass ? ' ' + extraClass : ''}`);
+    const dd = el('dd', null, money(amount));
+    dd.append(el('span', 'currency', 'USD'));
     row.append(el('dt', null, label), dd);
     return row;
   }
 
-  function renderScale(clock) {
-    const labels = clock === '24'
-      ? ['00:00', '06:00', '12:00', '18:00', '24:00']
-      : ['12 AM', '6 AM', '12 PM', '6 PM', '12 AM'];
-    scale.replaceChildren(...labels.map((t, i) => {
-      const span = el('span', null, t);
-      span.style.left = `${i * 25}%`;
-      return span;
-    }));
-  }
-
   function render() {
-    const tz = tzSelect.value;
-    const year = Number(yearSelect.value);
-    const clock = currentClock();
-    const ref = referenceDate(year);
+    const course = findBy(COURSES, 'id', courseSelect.value);
+    const country = findBy(countryList, 'name', countrySelect.value);
+    const job = findBy(JOBS, 'id', selectedValue('job'));
+    const funded = selectedValue('funded') === 'yes';
 
-    const month = new Intl.DateTimeFormat('en-US', { month: 'long', timeZone: 'UTC' }).format(ref);
-    basis.textContent =
-      `Times for ${month} ${CONFIG.referenceDay}, ${year}, when your time zone is ${formatOffset(offsetMinutes(tz, ref))}. ` +
-      'Daylight saving time is included. The bars show where each slot falls in your day; shaded parts are 10 PM to 7 AM.';
+    if (!country) {
+      result.replaceChildren(el('p', 'empty', `Choose your country of residence to see your fee for ${course.name}.`));
+      postToParent({ type: 'course-fee:change', course: course.id, country: null });
+      return;
+    }
 
-    const computed = CONFIG.slots.map((slot) => {
-      const coursework = localRange(year, slot.coursework, tz);
-      const projects = localRange(year, slot.projects, tz);
-      const startHour = coursework.start.hour + coursework.start.minute / 60;
-      return { slot, coursework, projects, distance: circularDistance(startHour, CONFIG.idealLocalStartHour) };
-    });
-    const best = computed.reduce((a, b) => (b.distance < a.distance ? b : a));
+    const fee = computeFee(course, country.rate, job, funded);
 
-    renderScale(clock);
+    const dl = el('dl', 'fees');
+    dl.append(
+      feeRow('Course fee', fee.base),
+      feeRow('Processing fee (non-refundable)', fee.processing),
+      feeRow('Total', fee.total, 'total')
+    );
 
-    slotList.replaceChildren(...computed.map((item) => {
-      const li = el('li', 'slot');
-      const isBest = item === best;
-      if (isBest) li.classList.add('is-recommended');
+    const parts = [];
+    parts.push(country.rate === 1
+      ? `no regional adjustment for ${country.name}`
+      : `the regional rate for ${country.name} (${Math.round(country.rate * 100)}% of the standard fee)`);
+    if (!job.industry) parts.push('the reduced rate for academia, other and self-employed participants');
+    if (!funded) parts.push('a 50% reduction because your fee won’t be reimbursed');
+    const list = parts.length > 1
+      ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+      : parts[0];
 
-      const head = el('div', 'slot-head');
-      head.append(
-        el('span', 'slot-name', `Slot ${item.slot.id}`),
-        el('span', 'slot-region', `Daytime in ${item.slot.region}`)
-      );
-      if (isBest) head.append(el('span', 'badge', 'Recommended'));
+    const explain = el('p', 'explain',
+      `The standard ${course.name} fee is ${money(course.fee)} USD. Your course fee includes ${list}.`);
 
-      const bar = el('div', 'day');
-      bar.setAttribute('aria-hidden', 'true');
-      addSegments(bar, item.coursework, 'course');
-      addSegments(bar, item.projects, 'project');
-
-      const dl = el('dl', 'times');
-      dl.append(
-        timeRow('course', 'Coursework', item.coursework, clock),
-        timeRow('project', 'Projects', item.projects, clock)
-      );
-
-      li.append(head, bar, dl);
-      return li;
-    }));
-
-    updateHint();
+    const nodes = [dl, explain];
+    if (!funded) {
+      const note = el('p', 'note', 'Before choosing “No”, try our ');
+      const toolkit = el('a', null, 'Tuition Toolkit');
+      toolkit.href = 'https://docs.neuromatch.io/p/EWjaSzD1pjoHRX/Neuromatch-Tuition-Toolkit';
+      toolkit.target = '_blank';
+      toolkit.rel = 'noopener';
+      note.append(toolkit,
+        ' to ask your supervisor or employer about covering the fee. ' +
+        'If you still can’t afford the reduced fee, you can apply for a hardship discount in the payment portal.');
+      nodes.push(note);
+    }
+    result.replaceChildren(...nodes);
 
     postToParent({
-      type: 'slot-selector:change',
-      timeZone: tz,
-      year,
-      recommendedSlot: best.slot.id
+      type: 'course-fee:change',
+      course: course.id,
+      country: country.name,
+      job: job.id,
+      funded,
+      courseFee: fee.base,
+      processingFee: fee.processing,
+      total: fee.total,
+      currency: 'USD'
     });
   }
 
-  // Report the widget's height so the portal can size the iframe with no inner scrollbar.
   function watchHeight() {
     if (!IN_FRAME) return;
     let last = 0;
@@ -705,7 +452,7 @@
       const height = Math.ceil(document.body.getBoundingClientRect().height);
       if (height !== last) {
         last = height;
-        postToParent({ type: 'slot-selector:resize', height });
+        postToParent({ type: 'course-fee:resize', height });
       }
     };
     if (typeof ResizeObserver === 'function') new ResizeObserver(report).observe(document.body);
@@ -713,34 +460,10 @@
     report();
   }
 
-  /* ---------------- Wiring ---------------- */
-
-  buildYearOptions();
-  const urlZone = params.get('tz');
-  buildZoneOptions(Number(yearSelect.value), urlZone && isValidZone(urlZone) ? urlZone : store.get('tz'));
-
-  const urlClock = params.get('clock');
-  const clockValue = (urlClock === '12' || urlClock === '24') ? urlClock : (store.get('clock') || defaultClock);
-  const clockInput = document.querySelector(`input[name="clock"][value="${clockValue}"]`);
-  if (clockInput) clockInput.checked = true;
-
-  tzSelect.addEventListener('change', () => {
-    store.set('tz', tzSelect.value);
-    render();
-  });
-
-  yearSelect.addEventListener('change', () => {
-    store.set('year', yearSelect.value);
-    // Offsets in the list depend on the year's daylight saving rules.
-    buildZoneOptions(Number(yearSelect.value), tzSelect.value);
-    render();
-  });
-
-  document.querySelectorAll('input[name="clock"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      store.set('clock', input.value);
-      render();
-    });
+  courseSelect.addEventListener('change', render);
+  countrySelect.addEventListener('change', render);
+  document.querySelectorAll('input[name="job"], input[name="funded"]').forEach((input) => {
+    input.addEventListener('change', render);
   });
 
   render();
