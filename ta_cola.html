@@ -1,350 +1,378 @@
 <!doctype html>
 <html lang="en">
 <head>
-<title>TA Payment</title>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TA pay calculator</title>
+<script>
+  // ?theme=light (default) | dark | auto
+  (function () {
+    var root = document.documentElement;
+    var theme = 'light';
+    try {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'dark' || t === 'auto') theme = t;
+    } catch (e) {}
+    root.setAttribute('data-theme', theme);
+    var inFrame = true;
+    try { inFrame = window.self !== window.top; } catch (e) {}
+    if (inFrame) root.classList.add('in-frame');
+  })();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    --page: #ffffff;
+    --surface: #ffffff;
+    --panel: #f4f6f7;
+    --border: #d9e0e3;
+    --border-strong: #b7c3c8;
+    --header-bg: #abbac1;
+    --header-text: #1c272c;
+    --text: #1f2529;
+    --muted: #5a666c;
+    --accent: #2e6a86;
+    --on-accent: #ffffff;
+    --total-bg: #eef5f9;
+    --input-bg: #ffffff;
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    --page: #161b1e; --surface: #1c2226; --panel: #232a2f; --border: #333d43; --border-strong: #4a565d;
+    --header-bg: #3d4b52; --header-text: #eef3f5; --text: #e6ebee; --muted: #a3afb5;
+    --accent: #7fb6d1; --on-accent: #10222b; --total-bg: #1f2d35; --input-bg: #1a2024;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="auto"] {
+      --page: #161b1e; --surface: #1c2226; --panel: #232a2f; --border: #333d43; --border-strong: #4a565d;
+      --header-bg: #3d4b52; --header-text: #eef3f5; --text: #e6ebee; --muted: #a3afb5;
+      --accent: #7fb6d1; --on-accent: #10222b; --total-bg: #1f2d35; --input-bg: #1a2024;
+      color-scheme: dark;
+    }
+  }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    background: var(--page);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  html.in-frame body { padding: 0; background: transparent; }
+  html.in-frame .widget { max-width: none; }
+
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .widget {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .widget-header { background: var(--header-bg); padding: 14px 20px; }
+  .widget-header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; color: var(--header-text); }
+  .widget-body { padding: 20px; }
+
+  .intro { margin: 0 0 20px; max-width: 64ch; }
+
+  /* Controls */
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 16px;
+    background: var(--panel);
+    border-radius: 8px;
+  }
+  .field-wide { grid-column: 1 / -1; }
+  @media (max-width: 560px) {
+    .controls { grid-template-columns: 1fr; }
+  }
+  .field-label {
+    display: block;
+    margin: 0 0 6px;
+    padding: 0;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  select {
+    width: 100%;
+    font: inherit;
+    padding: 8px 10px;
+    color: var(--text);
+    background: var(--input-bg);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+  }
+  select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .segmented input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .segmented label {
+    padding: 7px 14px;
+    cursor: pointer;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+  }
+  .segmented input:checked + label { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+  .segmented input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Result */
+  .result { margin-top: 20px; }
+  .empty {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 8px;
+    color: var(--muted);
+  }
+  .fees {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .fee-row:first-child { border-top: 0; }
+  .fee-row dt { margin: 0; }
+  .fee-row dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fee-row.total { background: var(--total-bg); }
+  .fee-row.total dt { font-weight: 700; }
+  .fee-row.total dd { font-size: 1.25rem; font-weight: 700; }
+  .currency { font-size: .85em; font-weight: 500; color: var(--muted); margin-left: 4px; }
+
+  .explain { margin: 12px 0 0; font-size: .92rem; color: var(--muted); max-width: 64ch; }
+  .note {
+    margin: 12px 0 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: var(--panel);
+    font-size: .92rem;
+    max-width: 64ch;
+  }
+
+  /* About */
+  .about { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .about h2 { margin: 0 0 8px; font-size: 1rem; }
+  .about p { margin: 0 0 12px; max-width: 64ch; font-size: .95rem; }
+  .contact { margin: 20px 0 0; font-size: .92rem; color: var(--muted); }
+</style>
 </head>
 <body>
 
+<div class="widget">
+  <header class="widget-header">
+    <h1>TA pay calculator</h1>
+  </header>
 
-<div class="container" style="max-width: 800px;">
-    <div class="card" style="margin-top: 50px;">
-        <h5 class="card-header">Cost adjustment by location</h5>
-        <div class="card-body">
+  <div class="widget-body">
+    <p class="intro">
+      TA pay is adjusted by location. Choose your country of residence and the course you’re TAing to see your pay.
+    </p>
 
-<div>
-<br> We determine your pay based on your location.
-    Please select the menus below to see your pay. 
-<br>
- <br>
-    Pay Transparency Note:
-Gross regional pay adjustments are based on GDP per capita from 
-    <a href=https://data.worldbank.org/indicator/NY.GDP.PCAP.CD>WorldBank</a>. 
-    Although a flawed measure that leaves out wealth inequality as a factor, 
-    it is the best available indicator we could find to make payment more 
-    equitable and accessible across countries and regions, one of the core 
-    tenets of NMA.
+    <div class="controls">
+      <div>
+        <label class="field-label" for="course">Course you’re TAing</label>
+        <select id="course"></select>
+      </div>
+      <div>
+        <label class="field-label" for="country">Country of residence</label>
+        <select id="country"></select>
+      </div>
+    </div>
 
-<br>
+    <div class="result" id="result" aria-live="polite"></div>
+
+    <section class="about">
+      <h2>Pay transparency</h2>
+      <p>
+        Regional pay adjustments are based on GDP per capita data from the
+        <a href="https://data.worldbank.org/indicator/NY.GDP.PCAP.CD" target="_blank" rel="noopener">World Bank</a>.
+        GDP per capita is a flawed measure that leaves out wealth inequality, but it’s the best indicator we’ve found
+        for making pay more equitable and accessible across countries and regions, one of the core tenets of Neuromatch Academy.
+      </p>
+      <p>
+        Half of your pay is the same for everyone. The other half is adjusted by your country’s regional rate.
+        Amounts shown are gross pay in US dollars.
+      </p>
+      <p class="contact" id="rates-updated"></p>
+      <p class="contact">
+        Questions? Email <a href="mailto:nma@neuromatch.io">nma@neuromatch.io</a>.
+      </p>
+    </section>
+  </div>
 </div>
-<br>
-<span style = "font-size:13pt;"><i> Country of residence:</i></span> <select class="js-Selector0" onchange="onChange()" id='country'>
-</select>
-<br>
-<span style = "font-size:13pt;"><i> Which course are you TAing? </i></span> <select class="js-Selector3" onchange="onChange()" id='course'>
-</select>
-<br><br>
-<p><span style = "font-size:13pt;"><i> TA Payment:</i></span></p>
-<div id="costs">
 
-</div>
-
-<div>
-    <br>
-  * If you have issues with the website please try the Chrome browser.
-    <br>
-            If you have any questions please email us <a href="mailto:nma@neuromatch.io" target="_blank">nma@neuromatch.io</a>
-</div>
-
+<script src="rates.js?v=2026-11-05"></script>
 <script>
-// Adapted from https://matall.in/posts/building-an-usable-timezone-selector/ 
+(() => {
+  'use strict';
 
-const _t = (s) => {
-    if (i18n !== void 0 && i18n[s]) {
-      return i18n[s];
-    }
-  
-    return s;
-  };
+  /* ------------------------------------------------------------------
+   * Pay configuration. computePay() reproduces the original widget
+   * exactly; change amounts or rates here, not the formula.
+   * ------------------------------------------------------------------ */
+  const COURSES = [
+    { id: 'deep-learning',  name: 'Deep Learning',              leadTa: 2468, ta: 1879 },
+    { id: 'comp-neuro',     name: 'Computational Neuroscience', leadTa: 2468, ta: 1879 },
+    { id: 'comp-behaviour', name: 'Computational Behaviour',    leadTa: 1654, ta: 1260 },
+    { id: 'neuroai',        name: 'NeuroAI',                    leadTa: 1654, ta: 1260 }
+    // { id: 'open-science-101', name: 'Open Science 101', leadTa: 506.25, ta: 506.25 }
+  ];
 
-  const countries = [
-  "Baseline Fee", 1.0,
-"Afghanistan", 0.1,
-"Aland Islands", 1.0,
-"Albania", 0.2,
-"Algeria", 0.1,
-"American Samoa", 0.3,
-"Andorra", 1.0,
-"Angola", 0.1,
-"Antigua and Barbuda", 0.5,
-"Argentina", 0.3,
-"Armenia", 0.2,
-"Aruba", 0.7,
-"Australia", 1.0,
-"Austria", 1.0,
-"Azerbaijan", 0.1,
-"Bahamas", 0.7,
-"Bahrain", 0.6,
-"Bangladesh", 0.1,
-"Barbados", 0.5,
-"Belarus", 0.2,
-"Belgium", 1.0,
-"Belize", 0.1,
-"Benin", 0.1,
-"Bermuda", 1.0,
-"Bhutan", 0.1,
-"Bolivia", 0.1,
-"Bonaire", 1.0,
-"Bosnia and Herzegovina", 0.2,
-"Botswana", 0.1,
-"Brazil", 0.2,
-"British Virgin Islands", 0.8,
-"Brunei", 0.6,
-"Bulgaria", 0.4,
-"Burkina Faso", 0.1,
-"Burundi", 0.1,
-"Cabo Verde", 0.1,
-"Cambodia", 0.1,
-"Cameroon", 0.1,
-"Canada", 1.0,
-"Cayman Islands", 1.0,
-"Central African Republic", 0.1,
-"Chad", 0.1,
-"Channel Islands", 1.0,
-"Chile", 0.3,
-"China", 0.3,
-"Colombia", 0.2,
-"Comoros", 0.1,
-"Costa Rica", 0.4,
-"Croatia", 0.5,
-"Cuba", 0.1,
-"Curacao", 0.4,
-"Cyprus", 0.8,
-"Czechia", 0.7,
-"Democratic Republic of the Congo", 0.1,
-"Denmark", 1.0,
-"Djibouti", 0.1,
-"Dominica", 0.2,
-"Dominican Republic", 0.2,
-"Ecuador", 0.1,
-"Egypt", 0.1,
-"El Salvador", 0.1,
-"Equatorial Guinea", 0.1,
-"Eritrea", 0.1,
-"Estonia", 0.6,
-"Eswatini", 0.1,
-"Ethiopia", 0.1,
-"Faroe Islands", 1.0,
-"Fiji", 0.1,
-"Finland", 1.0,
-"France", 0.9,
-"French Guiana", 0.4,
-"French Polynesia", 0.4,
-"Gabon", 0.2,
-"Gambia", 0.1,
-"Georgia", 0.2,
-"Germany", 1.0,
-"Ghana", 0.1,
-"Gibraltar", 0.1,
-"Greece", 0.5,
-"Greenland", 1.0,
-"Grenada", 0.2,
-"Guadeloupe", 0.8,
-"Guam", 0.8,
-"Guatemala", 0.1,
-"Guinea", 0.1,
-"Guinea-Bissau", 0.1,
-"Guyana", 0.6,
-"Haiti", 0.1,
-"Honduras", 0.1,
-"Hong Kong", 1.0,
-"Hungary", 0.5,
-"Iceland", 1.0,
-"India", 0.1,
-"Indonesia", 0.1,
-"Iran", 0.1,
-"Iraq", 0.1,
-"Ireland", 1.0,
-"Isle of Man", 1.0,
-"Israel", 1.0,
-"Italy", 0.8,
-"Ivory Coast", 0.1,
-"Jamaica", 0.1,
-"Japan", 0.7,
-"Jersey", 1.0,
-"Jordan", 0.1,
-"Kazakhstan", 0.3,
-"Kenya", 0.1,
-"Kiribati", 0.1,
-"Kosovo", 0.1,
-"Kuwait", 0.6,
-"Kyrgyzstan", 0.1,
-"Laos", 0.1,
-"Latvia", 0.5,
-"Lebanon", 0.1,
-"Lesotho", 0.1,
-"Liberia", 0.1,
-"Libya", 0.1,
-"Liechtenstein", 1.0,
-"Lithuania", 0.6,
-"Luxembourg", 1.0,
-"Macao", 1.0,
-"Madagascar", 0.1,
-"Malawi", 0.1,
-"Malaysia", 0.2,
-"Maldives", 0.3,
-"Mali", 0.1,
-"Malta", 0.9,
-"Marshall Islands", 0.2,
-"Martinique", 0.8,
-"Mauritania", 0.1,
-"Mauritius", 0.2,
-"Mexico", 0.3,
-"Micronesia", 0.1,
-"Moldova", 0.2,
-"Monaco", 1.0,
-"Mongolia", 0.1,
-"Montenegro", 0.3,
-"Montserrat", 0.4,
-"Morocco", 0.1,
-"Mozambique", 0.1,
-"Myanmar", 0.1,
-"Namibia", 0.1,
-"Nauru", 0.3,
-"Nepal", 0.1,
-"Netherlands", 1.0,
-"New Caledonia", 0.5,
-"New Zealand", 0.9,
-"Nicaragua", 0.1,
-"Niger", 0.1,
-"Nigeria", 0.1,
-"Niue", 0.3,
-"North Korean", 0.1,
-"North Macedonia", 0.2,
-"Northern Mariana Islands", 0.4,
-"Norway", 1.0,
-"Oman", 0.4,
-"Pakistan", 0.1,
-"Palau", 0.4,
-"Palestinian Territory", 0.1,
-"Panama", 0.4,
-"Papua New Guinea", 0.1,
-"Paraguay", 0.1,
-"Peru", 0.2,
-"Philippines", 0.1,
-"Poland", 0.5,
-"Portugal", 0.6,
-"Puerto Rico", 0.8,
-"Qatar", 1.0,
-"Republic of the Congo", 0.1,
-"Reunion", 0.1,
-"Romania", 0.4,
-"Russia", 0.3,
-"Rwanda", 0.1,
-"Saint Kitts and Nevis", 0.5,
-"Saint Lucia", 0.3,
-"Saint Vincent and the Grenadines", 0.2,
-"Samoa", 0.1,
-"San Marino", 1.0,
-"Sao Tome and Principe", 0.1,
-"Saudi Arabia", 0.6,
-"Senegal", 0.1,
-"Serbia", 0.3,
-"Seychelles", 0.4,
-"Sierra Leone", 0.1,
-"Singapore", 1.0,
-"Sint Maarten (Dutch part)", 0.8,
-"Slovakia", 0.5,
-"Slovenia", 0.7,
-"Solomon Islands", 0.1,
-"Somalia", 0.1,
-"South Africa", 0.1,
-"South Korea", 0.7,
-"South Sudan", 0.1,
-"Spain", 0.7,
-"Sri Lanka", 0.1,
-"St. Martin (French part)", 0.1,
-"Sudan", 0.1,
-"Suriname", 0.1,
-"Svalbard and Jan Mayen", 1.0,
-"Sweden", 1.0,
-"Switzerland", 1.0,
-"Syria", 0.1,
-"Taiwan", 0.8,
-"Tajikistan", 0.1,
-"Tanzania", 0.1,
-"Thailand", 0.1,
-"Timor Leste", 0.1,
-"Togo", 0.1,
-"Tonga", 0.1,
-"Trinidad and Tobago", 0.4,
-"Tunisia", 0.1,
-"Turkey", 0.3,
-"Turkmenistan", 0.1,
-"Turks and Caicos Islands", 0.7,
-"Tuvalu", 0.1,
-"Uganda", 0.1,
-"Ukraine", 0.1,
-"United Arab Emirates", 0.9,
-"United Kingdom", 1.0,
-"United States", 1.0,
-"Uruguay", 0.5,
-"Uzbekistan", 0.1,
-"Vanuatu", 0.1,
-"Vatican", 0.4,
-"Venezuela", 0.1,
-"Vietnam", 0.1,
-"Virgin Islands (U.S.)", 0.8,
-"Western Sahara", 0.1,
-"Yemen", 0.1,
-"Zambia", 0.1,
-"Zimbabwe", 0.1
-];
-    
-  var select0 = document.querySelector(".js-Selector0"); //.innerHTML = "";
+  const FIXED_SHARE = 0.5;  // this part of pay is the same everywhere; the rest scales with the regional rate
 
-  for(var i = 0; i < countries.length/2; i++) {
-    var opt = document.createElement('option');
-    opt.value = countries[2*i+1];
-    opt.text = countries[2*i];
-    select0.add(opt);
-  }  
-    
-  var select3 = document.querySelector(".js-Selector3"); //.innerHTML = "";
-  var opt = document.createElement('option');
-  opt.value = [2468, 1879];
-  opt.text = 'Deep Learning';
-  select3.add(opt);
-  var opt = document.createElement('option');
-  opt.value = [2468, 1879];
-  opt.text = 'Computational Neuroscience';
-  select3.add(opt);
-  var opt = document.createElement('option');
-  opt.value = [1654, 1260];
-  opt.text = 'Computational Behaviour';
-  select3.add(opt);
-  var opt = document.createElement('option');
-  opt.value = [1654, 1260];
-  opt.text = 'NeuroAI';
-  select3.add(opt);
-  // var opt = document.createElement('option');
-  // opt.value = [506.25, 506.25];
-  // opt.text = 'Open Science 101';
-  // select3.add(opt);
+  // Rates come from rates.js, shared with the other widget.
+  const RATES = window.NMA_RATES;
+  const OVERRIDES = (RATES && RATES.overrides && RATES.overrides.taPay) || {};
 
-  //document.querySelector(".js-Selector").value = "Europe/Brussels";
-  
-  function onChange() {
-    var country = document.getElementById('country').value
-    var course = document.getElementById('course').value.split(",")
-    var lead_ta = course[0];
-    var ta = course[1];
-    
-    theStr = Math.round((0.5 + 0.5 * country) * lead_ta) + ' USD' + ' / ' + Math.round((0.5 + 0.5 * country) * ta) + ' USD' + ' -- (LeadTA/TA)'
-    
-    document.getElementById('costs').innerHTML = theStr;
+  // Same arithmetic as the original widget.
+  function computePay(amount, rate) {
+    return Math.round((FIXED_SHARE + (1 - FIXED_SHARE) * rate) * amount);
   }
-  
-  onChange();
 
+  /* ---------------- Embedding ----------------
+   * URL parameters: ?course=deep-learning&country=Brazil&theme=auto
+   * Set PARENT_ORIGIN to your portal's origin to restrict who receives messages.
+   */
+  const PARENT_ORIGIN = '*';
+  const IN_FRAME = document.documentElement.classList.contains('in-frame');
+  const params = new URLSearchParams(location.search);
+
+  function postToParent(message) {
+    if (!IN_FRAME) return;
+    try { window.parent.postMessage(message, PARENT_ORIGIN); } catch (e) { /* ignore */ }
+  }
+
+  /* ---------------- Controls ---------------- */
+
+  const $ = (id) => document.getElementById(id);
+  const courseSelect = $('course');
+  const countrySelect = $('country');
+  const result = $('result');
+
+  const money = (n) => `$${n.toLocaleString('en-US')}`;
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  const findBy = (list, key, value) =>
+    list.find((item) => String(item[key]).toLowerCase() === String(value || '').toLowerCase());
+
+  courseSelect.append(...COURSES.map((c) => new Option(c.name, c.id)));
+  courseSelect.value = (findBy(COURSES, 'id', params.get('course')) || COURSES[0]).id;
+
+  if (!RATES || !RATES.countries) {
+    document.querySelector('.controls').hidden = true;
+    result.replaceChildren(el('p', 'empty', 'TA pay can’t be shown right now. Please try again later, or email nma@neuromatch.io.'));
+    watchHeight();
+    return;
+  }
+
+  const countryList = Object.entries(RATES.countries)
+    .map(([name, rate]) => ({ name, rate: name in OVERRIDES ? OVERRIDES[name] : rate }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (RATES.updated) {
+    const updated = new Date(RATES.updated + 'T00:00:00Z');
+    $('rates-updated').textContent =
+      `Regional rates last updated ${updated.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}.`;
+  }
+  const prompt = new Option('Select your country', '');
+  prompt.disabled = true;
+  countrySelect.append(prompt, ...countryList.map((c) => new Option(c.name, c.name)));
+  const urlCountry = findBy(countryList, 'name', params.get('country'));
+  countrySelect.value = urlCountry ? urlCountry.name : '';
+
+  /* ---------------- Render ---------------- */
+
+  function payRow(label, amount) {
+    const row = el('div', 'fee-row');
+    const dd = el('dd', null, money(amount));
+    dd.append(el('span', 'currency', 'USD'));
+    row.append(el('dt', null, label), dd);
+    return row;
+  }
+
+  function render() {
+    const course = findBy(COURSES, 'id', courseSelect.value);
+    const country = findBy(countryList, 'name', countrySelect.value);
+
+    if (!country) {
+      result.replaceChildren(el('p', 'empty', `Choose your country of residence to see TA pay for ${course.name}.`));
+      postToParent({ type: 'ta-pay:change', course: course.id, country: null });
+      return;
+    }
+
+    const leadTa = computePay(course.leadTa, country.rate);
+    const ta = computePay(course.ta, country.rate);
+    const share = Math.round((FIXED_SHARE + (1 - FIXED_SHARE) * country.rate) * 100);
+
+    const dl = el('dl', 'fees');
+    dl.append(payRow('Lead TA', leadTa), payRow('TA', ta));
+
+    const explain = el('p', 'explain', country.rate === 1
+      ? `${country.name} has no regional adjustment, so you receive the standard ${course.name} pay.`
+      : `In ${country.name}, TA pay is ${share}% of the standard ${course.name} pay ` +
+        `of ${money(course.leadTa)} USD for Lead TAs and ${money(course.ta)} USD for TAs.`);
+
+    result.replaceChildren(dl, explain);
+
+    postToParent({
+      type: 'ta-pay:change',
+      course: course.id,
+      country: country.name,
+      leadTa,
+      ta,
+      currency: 'USD'
+    });
+  }
+
+  function watchHeight() {
+    if (!IN_FRAME) return;
+    let last = 0;
+    const report = () => {
+      const height = Math.ceil(document.body.getBoundingClientRect().height);
+      if (height !== last) {
+        last = height;
+        postToParent({ type: 'ta-pay:resize', height });
+      }
+    };
+    if (typeof ResizeObserver === 'function') new ResizeObserver(report).observe(document.body);
+    window.addEventListener('load', report);
+    report();
+  }
+
+  courseSelect.addEventListener('change', render);
+  countrySelect.addEventListener('change', render);
+
+  render();
+  watchHeight();
+})();
 </script>
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
-</div>
-</div>
-</div>
-</body></html>
+</body>
+</html>
