@@ -62,7 +62,7 @@ window.NMA_RATES = {
     "Comoros": 0.1,
     "Costa Rica": 0.4,
     "Croatia": 0.5,
-    "Cuba": 0.1,
+    // "Cuba": 0.1,
     "Curacao": 0.4,
     "Cyprus": 0.8,
     "Czechia": 0.7,
@@ -107,7 +107,7 @@ window.NMA_RATES = {
     "Iceland": 1.0,
     "India": 0.1,
     "Indonesia": 0.1,
-    "Iran": 0.1,
+    // "Iran": 0.1,
     "Iraq": 0.1,
     "Ireland": 1.0,
     "Isle of Man": 1.0,
@@ -164,7 +164,7 @@ window.NMA_RATES = {
     "Niger": 0.1,
     "Nigeria": 0.1,
     "Niue": 0.3,
-    "North Korea": 0.1,
+    // "North Korea": 0.1,
     "North Macedonia": 0.2,
     "Northern Mariana Islands": 0.4,
     "Norway": 1.0,
@@ -249,7 +249,7 @@ window.NMA_RATES = {
   // Exceptions that apply to one widget only. They replace the shared rate for that widget.
   overrides: {
     courseFee: {
-      "Iran": 0.0
+      // "Iran": 0.0
     },
     taPay: {}
   }
