@@ -343,7 +343,7 @@
     const ta = computePay(course.ta, country.rate);
 
     const dl = el('dl', 'fees');
-    dl.append(payRow('Lead TA', leadTa), payRow('TA', ta));
+    dl.append(payRow('Lead TA / Lead Project TA', leadTa), payRow('TA / Project TA', ta));
 
     const explain = el('p', 'explain',
       `Gross pay in US dollars for ${course.name} TAs living in ${country.name}.`);
